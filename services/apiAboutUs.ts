@@ -5,7 +5,7 @@ export interface SiteSettings {
   site_name_en: string;
   about_us_ar: string;
   about_us_en: string;
-  logo: string;
+  logo_url: string;
 }
 
 export async function getAboutUs(): Promise<SiteSettings> {
