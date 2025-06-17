@@ -44,7 +44,6 @@ const AdsList: React.FC = () => {
     setValue,
   } = useForm<FormData>();
 
-  // ✅ تحميل البيانات من Supabase
   useEffect(() => {
     const fetchAds = async () => {
       const { data, error } = await supabase
@@ -62,19 +61,50 @@ const AdsList: React.FC = () => {
     fetchAds();
   }, []);
 
-  // ✅ حذف إعلان من Supabase
   const handleDeleteAd = async (id: string) => {
     try {
-      const { error } = await supabase.from("ads").delete().eq("id", id);
+      // First get the ad to get its image URL
+      const { data: ad, error: fetchError } = await supabase
+        .from("ads")
+        .select("image_url")
+        .eq("id", id)
+        .single();
 
-      if (error) {
-        toast.error(`Delete failed: ${error.message}`);
-      } else {
-        setAdsList((prev) => prev.filter((ad) => ad.id !== id));
-        toast.success("تم مسح الاعلان بنجاح");
+      if (fetchError) {
+        throw new Error("فشل في جلب بيانات الإعلان");
       }
+
+      // Extract the file path from the image URL
+      const imageUrl = ad.image_url;
+      const urlParts = imageUrl.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+
+      if (fileName) {
+        // Delete the image from storage
+        const { error: storageError } = await supabase.storage
+          .from("adsmedia")
+          .remove([fileName]);
+
+        if (storageError) {
+          console.error("Error deleting image:", storageError);
+          throw new Error("فشل في حذف الصورة من التخزين");
+        }
+      }
+
+      // Delete the ad record
+      const { error: deleteError } = await supabase
+        .from("ads")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        throw new Error("فشل في حذف الإعلان");
+      }
+
+      setAdsList((prev) => prev.filter((ad) => ad.id !== id));
+      toast.success("تم حذف الإعلان والصورة بنجاح");
     } catch (err) {
-      toast.error(`Unexpected error: ${(err as Error).message}`);
+      toast.error((err as Error).message);
     }
   };
 
@@ -196,7 +226,7 @@ const AdsList: React.FC = () => {
             </select>
           </div>
           <Link
-            href="/ads/create-ads"
+            href="/dashboard/ads/create-ads"
             className="inline-block transition-all rounded-md font-medium px-[13px] py-[6px] text-primary-500 border border-primary-500 hover:bg-primary-500 hover:text-white"
           >
             <span className="relative pl-6">
@@ -240,7 +270,9 @@ const AdsList: React.FC = () => {
                       className="rounded"
                     />
                   </td>
-                  <td className="py-3 px-3">{ad.location}</td>
+                  <td className="py-3 px-3">
+                    {ad.location === "home" ? "الرئيسية" : "أخرى"}
+                  </td>
                   <td className="py-3 px-3">
                     {new Date(ad.created_at).toLocaleDateString("ar-EG")}
                   </td>
@@ -347,10 +379,8 @@ const AdsList: React.FC = () => {
                       className="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 cursor-pointer transition-all"
                     >
                       <option value="">اختر مكان الإعلان</option>
-                      <option value="home">الصفحة الرئيسية</option>
-                      <option value="gallery">معرض الصور</option>
-                      <option value="profile">الملف الشخصي</option>
-                      <option value="settings">الإعدادات</option>
+                      <option value="home">الرئيسية</option>
+                      <option value="other">أخرى</option>
                     </select>
                     {errors.location && (
                       <p className="text-red-500 mt-1">مطلوب</p>

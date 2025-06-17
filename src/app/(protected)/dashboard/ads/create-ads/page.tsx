@@ -75,6 +75,29 @@ export default function CreateAds() {
     setLoading(true);
 
     try {
+      // Check existing ads count for the selected location
+      const { data: existingAds, error: countError } = await supabase
+        .from("ads")
+        .select("id")
+        .eq("location", data.location);
+
+      if (countError) {
+        throw new Error("حدث خطأ أثناء التحقق من عدد الإعلانات");
+      }
+
+      // Validate ads limit
+      if (data.location === "home" && existingAds.length >= 3) {
+        toast.error("لا يمكن إضافة أكثر من 3 إعلانات في الصفحة الرئيسية");
+        setLoading(false);
+        return;
+      }
+
+      if (data.location === "other" && existingAds.length >= 1) {
+        toast.error("لا يمكن إضافة أكثر من إعلان واحد في الصفحات الأخرى");
+        setLoading(false);
+        return;
+      }
+
       const fileExt = selectedImage.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
 
@@ -192,9 +215,7 @@ export default function CreateAds() {
                 >
                   <option value="">اختر مكان الإعلان</option>
                   <option value="home">الصفحة الرئيسية</option>
-                  <option value="gallery">معرض الصور</option>
-                  <option value="profile">الملف الشخصي</option>
-                  <option value="settings">الإعدادات</option>
+                  <option value="other">الصفحات الأخرى</option>
                 </select>
                 {errors.location && (
                   <p className="text-red-500 mt-1">{errors.location.message}</p>

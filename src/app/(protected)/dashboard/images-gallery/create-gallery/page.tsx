@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ type GalleryFormData = z.infer<typeof gallerySchema>;
 export default function CreatGalleryPage() {
   const router = useRouter();
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const {
     register,
@@ -41,12 +42,21 @@ export default function CreatGalleryPage() {
       });
     },
     onSuccess: () => {
-      toast.success("تم إنشاء الحساب بنجاح");
+      toast.success("تم إنشاء المعرض بنجاح");
       router.push("/dashboard/images-gallery");
+    },
+    onError: (error) => {
+      console.error("Error creating gallery:", error);
+      toast.error("فشل في إنشاء المعرض");
     },
   });
 
   const onSubmit = (data: GalleryFormData) => {
+    if (selectedImages.length === 0) {
+      toast.error("يرجى اختيار صورة واحدة على الأقل");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title_ar", data.title_ar);
     formData.append("title_en", data.title_en);
@@ -69,6 +79,16 @@ export default function CreatGalleryPage() {
   const handleRemoveImage = (index: number) => {
     setSelectedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
+
+  // Clean up object URLs when component unmounts or images change
+  useEffect(() => {
+    const urls = selectedImages.map((image) => URL.createObjectURL(image));
+    setImageUrls(urls);
+
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [selectedImages]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -138,7 +158,7 @@ export default function CreatGalleryPage() {
               {/* رفع الصور */}
               <div className="sm:col-span-2">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  اختر الصور
+                  اختر الصور *
                 </label>
                 <div className="relative flex items-center justify-center overflow-hidden rounded-md py-[65px] px-[20px] border border-gray-200 dark:border-[#172036]">
                   <div className="flex items-center justify-center">
@@ -159,11 +179,17 @@ export default function CreatGalleryPage() {
                   />
                 </div>
 
+                {selectedImages.length === 0 && (
+                  <p className="text-red-500 text-sm mt-2">
+                    يرجى اختيار صورة واحدة على الأقل
+                  </p>
+                )}
+
                 <div className="mt-[10px] flex flex-wrap gap-2">
-                  {selectedImages.map((image, index) => (
+                  {imageUrls.map((url, index) => (
                     <div key={index} className="relative w-[50px] h-[50px]">
                       <Image
-                        src={URL.createObjectURL(image)}
+                        src={url}
                         alt="preview"
                         width={50}
                         height={50}
@@ -185,8 +211,8 @@ export default function CreatGalleryPage() {
             <div className="mt-[20px] sm:mt-[25px]">
               <button
                 type="submit"
-                disabled={mutation.isPending}
-                className="font-medium inline-block transition-all rounded-md 2xl:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400"
+                disabled={mutation.isPending || selectedImages.length === 0}
+                className="font-medium inline-block transition-all rounded-md 2xl:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {mutation.isPending ? "جارٍ الإرسال..." : "إنشاء"}
               </button>

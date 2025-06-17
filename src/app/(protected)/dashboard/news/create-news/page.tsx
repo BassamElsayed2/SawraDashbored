@@ -87,6 +87,7 @@ const CreateNewsForm: React.FC = () => {
 
   // Upload images
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -135,16 +136,30 @@ const CreateNewsForm: React.FC = () => {
       return;
     }
 
-    // ارفع الصور أولاً
-    const uploadedImageUrls = await uploadImages(selectedImages);
+    // تحقق من وجود صور
+    if (selectedImages.length === 0) {
+      toast.error("يجب إضافة صورة واحدة على الأقل");
+      return;
+    }
 
-    const finalData = {
-      ...data,
-      user_id: userId,
-      images: uploadedImageUrls,
-    };
+    try {
+      setIsUploadingImages(true);
+      // ارفع الصور أولاً
+      const uploadedImageUrls = await uploadImages(selectedImages);
 
-    mutate(finalData);
+      const finalData = {
+        ...data,
+        user_id: userId,
+        images: uploadedImageUrls,
+      };
+
+      mutate(finalData);
+    } catch (error: Error | unknown) {
+      toast.error("حدث خطأ أثناء رفع الصور");
+      console.error("Image upload error:", error);
+    } finally {
+      setIsUploadingImages(false);
+    }
   };
 
   return (
@@ -453,14 +468,32 @@ const CreateNewsForm: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isPending}
-              className="font-medium inline-block transition-all rounded-md md:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400"
+              disabled={isPending || isUploadingImages}
+              className="font-medium inline-block transition-all rounded-md md:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="inline-block relative ltr:pl-[29px] rtl:pr-[29px]">
-                <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2">
-                  add
-                </i>
-                انشاء خبر
+                {isUploadingImages ? (
+                  <>
+                    <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
+                      sync
+                    </i>
+                    جاري رفع الصور...
+                  </>
+                ) : isPending ? (
+                  <>
+                    <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
+                      sync
+                    </i>
+                    جاري الإنشاء...
+                  </>
+                ) : (
+                  <>
+                    <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2">
+                      add
+                    </i>
+                    انشاء خبر
+                  </>
+                )}
               </span>
             </button>
           </div>

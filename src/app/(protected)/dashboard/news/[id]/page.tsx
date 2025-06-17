@@ -46,6 +46,8 @@ interface NewsFormData {
 export default function EditNewsPage() {
   const [serverImages, setServerImages] = useState<string[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const { register, handleSubmit, reset, control } = useForm({
@@ -85,12 +87,16 @@ export default function EditNewsPage() {
         category_id: news.category_id?.toString() || "",
         status: news.status || "",
         publisher_name: news.publisher_name || "",
-        yt_code: news.youtube_code || "",
+        yt_code: news.yt_code || "",
         content_ar: news.content_ar || "",
         content_en: news.content_en || "",
       });
 
-      setServerImages(news.images_urls || []);
+      if (news.images && Array.isArray(news.images)) {
+        setServerImages(news.images);
+      } else {
+        setServerImages([]);
+      }
       setSelectedImages([]);
     }
   }, [news, reset]);
@@ -115,10 +121,13 @@ export default function EditNewsPage() {
     try {
       if (!id) throw new Error("No ID found");
 
+      setIsSubmitting(true);
       let uploadedUrls: string[] = [];
 
       if (selectedImages && selectedImages.length > 0) {
+        setIsUploadingImages(true);
         uploadedUrls = await uploadImages(selectedImages, "news");
+        setIsUploadingImages(false);
       }
       const allImages = [...serverImages, ...uploadedUrls];
 
@@ -136,9 +145,12 @@ export default function EditNewsPage() {
       toast.success("تم تحديث الخبر بنجاح");
       queryClient.invalidateQueries({ queryKey: ["news"] });
       router.push("/dashboard/news");
-    } catch (error) {
+    } catch (error: Error | unknown) {
       toast.error("حدث خطأ ما");
       console.log("حدث خطأ أثناء تحديث الخبر:", error);
+    } finally {
+      setIsSubmitting(false);
+      setIsUploadingImages(false);
     }
   };
 
@@ -221,7 +233,10 @@ export default function EditNewsPage() {
                 {/* كود اليوتيوب */}
                 <div>
                   <label className="block font-medium mb-2">كود يوتيوب</label>
-                  <input className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" />
+                  <input
+                    {...register("yt_code")}
+                    className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                  />
                 </div>
 
                 {/* الخبر بالعربية */}
@@ -401,16 +416,40 @@ export default function EditNewsPage() {
         <div className="trezo-card-content">
           <button
             type="reset"
-            className="bg-danger-500 text-white px-4 py-2 rounded-md mr-3"
+            className="font-medium inline-block transition-all rounded-md md:text-md ltr:mr-[15px] rtl:ml-[15px] py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-danger-500 text-white hover:bg-danger-400"
           >
             إلغاء
           </button>
 
           <button
             type="submit"
-            className="bg-primary-500 text-white px-4 py-2 rounded-md mr-3"
+            disabled={isSubmitting || isUploadingImages}
+            className="font-medium inline-block transition-all rounded-md md:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            حفظ التعديلات
+            <span className="inline-block relative ltr:pl-[29px] rtl:pr-[29px]">
+              {isUploadingImages ? (
+                <>
+                  <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
+                    sync
+                  </i>
+                  جاري رفع الصور...
+                </>
+              ) : isSubmitting ? (
+                <>
+                  <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
+                    sync
+                  </i>
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2">
+                    save
+                  </i>
+                  حفظ التعديلات
+                </>
+              )}
+            </span>
           </button>
         </div>
       </div>
