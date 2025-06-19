@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
 
 import { useSignIn } from "./useSignIn";
 
@@ -124,12 +124,12 @@ const SignInForm: React.FC = () => {
                 </button>
               </form>
 
-              <Link
+              {/* <Link
                 href="/authentication/forgot-password"
                 className="inline-block text-primary-500 transition-all font-semibold hover:underline"
               >
                 هل نسيت كلمة السر؟
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
