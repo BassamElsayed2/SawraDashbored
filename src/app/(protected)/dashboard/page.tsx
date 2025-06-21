@@ -1,5 +1,6 @@
-import RecentProperty from "@/components/Dashboard/RealEstate/RecentProperty";
+import RecentProperty from "@/components/RecentProperty";
 import Welcome from "@/components/Dashboard/Restaurant/Welcome";
+import RecentNews from "@/components/RecentNews";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default function page() {
         <div>
           <RecentProperty />
         </div>
+        <RecentNews />
       </div>
     </>
   );
