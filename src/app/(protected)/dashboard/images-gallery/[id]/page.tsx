@@ -4,17 +4,12 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   deleteGalleries,
   getGalleriesById,
-  updateGallery,
 } from "../../../../../../services/apiGallery";
 import toast from "react-hot-toast";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { gallerySchema } from "@/components/Social/SettingsForm/lib/validations/schema";
 
 interface Gallery {
   id: string;
@@ -25,25 +20,12 @@ interface Gallery {
   image_urls: string[];
 }
 
-type GalleryFormData = z.infer<typeof gallerySchema>;
-
 const GalleryDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<GalleryFormData>({
-    resolver: zodResolver(gallerySchema),
-  });
 
   const {
     data: gallery,
@@ -60,33 +42,14 @@ const GalleryDetails: React.FC = () => {
 
   useEffect(() => {
     if (gallery) {
-      reset({
-        title_ar: gallery.title_ar,
-        title_en: gallery.title_en,
-        description_ar: gallery.description_ar || "",
-        description_en: gallery.description_en || "",
-      });
+      // reset({
+      //   title_ar: gallery.title_ar,
+      //   title_en: gallery.title_en,
+      //   description_ar: gallery.description_ar || "",
+      //   description_en: gallery.description_en || "",
+      // });
     }
-  }, [gallery, reset]);
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: GalleryFormData) => {
-      if (!id || !gallery) throw new Error("No ID or gallery data provided");
-      return await updateGallery(id, {
-        ...data,
-        image_urls: gallery.image_urls,
-      });
-    },
-    onSuccess: () => {
-      toast.success("تم تحديث المعرض بنجاح");
-      setIsEditModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["gallery", id] });
-    },
-    onError: (error) => {
-      console.error("Error updating gallery:", error);
-      toast.error("فشل في تحديث المعرض");
-    },
-  });
+  }, [gallery]);
 
   const deleteMutation = useMutation({
     mutationFn: deleteGalleries,
@@ -102,10 +65,6 @@ const GalleryDetails: React.FC = () => {
 
   const handleTabClick = (index: number) => {
     setActiveTab(index);
-  };
-
-  const onSubmit = async (data: GalleryFormData) => {
-    updateMutation.mutate(data);
   };
 
   if (isLoading) {
@@ -242,12 +201,12 @@ const GalleryDetails: React.FC = () => {
               )}
 
               <div className="pt-4 flex gap-4">
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
+                <Link
+                  href={`/dashboard/images-gallery/${id}/edit`}
                   className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors"
                 >
                   تعديل المعرض
-                </button>
+                </Link>
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
                   className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
@@ -267,104 +226,6 @@ const GalleryDetails: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal تعديل المعرض */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 max-w-2xl w-full mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold">تعديل المعرض</h3>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <i className="ri-close-line text-2xl"></i>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    العنوان (ar) *
-                  </label>
-                  <input
-                    {...register("title_ar")}
-                    className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0c1427]"
-                  />
-                  {errors.title_ar && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.title_ar.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    العنوان (en) *
-                  </label>
-                  <input
-                    {...register("title_en")}
-                    className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0c1427]"
-                  />
-                  {errors.title_en && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.title_en.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">
-                    الوصف (ar)
-                  </label>
-                  <textarea
-                    {...register("description_ar")}
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0c1427]"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">
-                    الوصف (en)
-                  </label>
-                  <textarea
-                    {...register("description_en")}
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0c1427]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                  disabled={updateMutation.isPending}
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-50"
-                >
-                  {updateMutation.isPending ? (
-                    <div className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white border-r-transparent rounded-full animate-spin"></span>
-                      جارٍ الحفظ...
-                    </div>
-                  ) : (
-                    "حفظ التغييرات"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal تأكيد الحذف */}
       {isDeleteModalOpen && (
