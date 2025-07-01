@@ -13,13 +13,14 @@ const statusColors: Record<string, string> = {
   important: "bg-success-50 dark:bg-[#15203c] text-success-500",
   urgent: "bg-danger-50 dark:bg-[#15203c] text-danger-500",
   trend: "bg-pink-50 dark:bg-[#15203c] text-danger-500",
+  most_sold: "bg-danger-50 dark:bg-[#15203c] text-danger-500",
 };
 
 const statusLabels: Record<string, string> = {
   normal: "عادي",
   important: "مهم",
-  urgent: "عاجل",
   trend: "رائج",
+  most_sold: "الاكثر مبيعا",
 };
 
 const NewsListTable: React.FC = () => {
@@ -203,7 +204,7 @@ const NewsListTable: React.FC = () => {
             className="w-full p-2 border transition border-[#f2f2f2] hover:bg-[#f2f2f2] rounded-lg outline-none dark:border-[#172036] dark:hover:bg-[#172036] dark:bg-[#0c1427] dark:text-white"
           >
             <option value="">جميع الحالات</option>
-            <option value="urgent">عاجل</option>
+
             <option value="important">مهم</option>
             <option value="trend">رائج</option>
             <option value="most_sold">الاكثر مبيعا</option>
