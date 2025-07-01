@@ -13,8 +13,6 @@ const RecentProperty: React.FC = () => {
     queryFn: () => getNews(),
   });
 
-  console.log(news);
-
   if (news?.news.length === 0) return <div>لا يوجد معارض</div>;
 
   return (

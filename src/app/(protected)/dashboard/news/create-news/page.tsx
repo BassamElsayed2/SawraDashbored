@@ -279,6 +279,7 @@ const CreateNewsForm: React.FC = () => {
                       <option value="important">مهم</option>
                       <option value="urgent">عاجل</option>
                       <option value="trend">رائج</option>
+                      <option value="most_sold">الاكثر مبيعا</option>
                     </select>
                   </div>
 

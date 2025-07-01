@@ -19,8 +19,7 @@ export function useSignIn() {
     }) => {
       return await loginApi({ email, password });
     },
-    onSuccess: async (user) => {
-      console.log("Login successful", user);
+    onSuccess: async () => {
       router.refresh(); // ⭐ ضروري علشان توصل الكوكيز للـ server
       router.push("/dashboard");
     },
