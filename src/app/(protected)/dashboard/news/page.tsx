@@ -206,6 +206,7 @@ const NewsListTable: React.FC = () => {
             <option value="urgent">عاجل</option>
             <option value="important">مهم</option>
             <option value="trend">رائج</option>
+            <option value="most_sold">الاكثر مبيعا</option>
           </select>
         </div>
 
