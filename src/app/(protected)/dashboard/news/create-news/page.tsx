@@ -37,12 +37,13 @@ type NewsFormValues = {
   title_en: string;
   category_id: UUID;
   status: string;
-  publisher_name?: string;
   yt_code?: string;
   content_ar: string;
   content_en: string;
   user_id: UUID;
   images: File[];
+  price?: number;
+  offers?: number;
 };
 
 const CreateNewsForm: React.FC = () => {
@@ -277,28 +278,15 @@ const CreateNewsForm: React.FC = () => {
                     >
                       <option value="">(اختياري) اختر الحالة</option>
                       <option value="important">مهم</option>
-                      <option value="urgent">عاجل</option>
+
                       <option value="trend">رائج</option>
                       <option value="most_sold">الاكثر مبيعا</option>
                     </select>
                   </div>
 
-                  <div className="mb-[20px] sm:mb-0">
-                    <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      اسم الناشر
-                    </label>
-                    <input
-                      type="text"
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
-                      placeholder="(اختياري)"
-                      id="publisher_name"
-                      {...register("publisher_name")}
-                    />
-                  </div>
-
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      الخبر (بالعربي)
+                      تفاصيل (بالعربي)
                     </label>
                     <EditorProvider>
                       <Editor
@@ -337,7 +325,7 @@ const CreateNewsForm: React.FC = () => {
 
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      الخبر (بالانجليزي)
+                      تفاصيل (بالانجليزي)
                     </label>
                     <EditorProvider>
                       <Editor
@@ -387,9 +375,40 @@ const CreateNewsForm: React.FC = () => {
                     />
                   </div>
 
+                  <div className="mb-[20px] sm:mb-0">
+                    <label className="mb-[10px] text-black dark:text-white font-medium block">
+                      السعر
+                    </label>
+                    <input
+                      type="number"
+                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                      placeholder="أدخل السعر (اجباري)"
+                      id="price"
+                      {...register("price", { required: "يجب ادخال السعر" })}
+                    />
+                    {errors?.price?.message && (
+                      <span className="text-red-700 text-sm">
+                        {errors.price.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mb-[20px] sm:mb-0">
+                    <label className="mb-[10px] text-black dark:text-white font-medium block">
+                      العروض
+                    </label>
+                    <input
+                      type="number"
+                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                      placeholder="أدخل الخصم (اختياري)"
+                      id="offers"
+                      {...register("offers")}
+                    />
+                  </div>
+
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      الصور الخاصة بالخبر
+                      الصور الخاصة بالمنتج
                     </label>
 
                     <div id="fileUploader">

@@ -37,10 +37,11 @@ interface NewsFormData {
   title_en: string;
   category_id: string;
   status: string;
-  publisher_name: string;
   yt_code: string;
   content_ar: string;
   content_en: string;
+  price: number;
+  offers: number;
 }
 
 export default function EditNewsPage() {
@@ -56,10 +57,11 @@ export default function EditNewsPage() {
       title_en: "",
       category_id: "",
       status: "",
-      publisher_name: "",
       yt_code: "",
       content_ar: "",
       content_en: "",
+      price: 0,
+      offers: 0,
     },
   });
 
@@ -86,10 +88,11 @@ export default function EditNewsPage() {
         title_en: news.title_en || "",
         category_id: news.category_id?.toString() || "",
         status: news.status || "",
-        publisher_name: news.publisher_name || "",
         yt_code: news.yt_code || "",
         content_ar: news.content_ar || "",
         content_en: news.content_en || "",
+        price: news.price || 0,
+        offers: news.offers || 0,
       });
 
       if (news.images && Array.isArray(news.images)) {
@@ -215,21 +218,35 @@ export default function EditNewsPage() {
                   >
                     <option value="">اختر الحالة</option>
                     <option value="important">مهم</option>
-                    <option value="urgent">عاجل</option>
                     <option value="trend">رائج</option>
                     <option value="most_sold">الاكثر مبيعا</option>
                   </select>
                 </div>
 
-                {/* اسم الناشر */}
-                <div>
-                  <label
-                    {...register("publisher_name")}
-                    className="block font-medium mb-2"
-                  >
-                    اسم الناشر
+                {/* السعر */}
+                <div className="mb-[20px] sm:mb-0">
+                  <label className="mb-[10px] text-black dark:text-white font-medium block">
+                    السعر
                   </label>
-                  <input className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" />
+                  <input
+                    type="number"
+                    className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                    placeholder="أدخل السعر (اجباري)"
+                    {...register("price", { required: "يجب ادخال السعر" })}
+                  />
+                </div>
+
+                {/* العروض */}
+                <div className="mb-[20px] sm:mb-0">
+                  <label className="mb-[10px] text-black dark:text-white font-medium block">
+                    العروض
+                  </label>
+                  <input
+                    type="number"
+                    className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                    placeholder="أدخل العروض (اختياري)"
+                    {...register("offers")}
+                  />
                 </div>
 
                 {/* كود اليوتيوب */}
@@ -250,7 +267,7 @@ export default function EditNewsPage() {
                       render={({ field }) => (
                         <div className="sm:col-span-2">
                           <label className="block font-medium mb-2">
-                            محتوى الخبر (ع)
+                            تفاصيل (بالعربي)
                           </label>
                           <EditorProvider>
                             <Editor
@@ -293,7 +310,7 @@ export default function EditNewsPage() {
                       render={({ field }) => (
                         <div className="sm:col-span-2">
                           <label className="block font-medium mb-2">
-                            محتوى الخبر (EN)
+                            تفاصيل (بالانجليزي)
                           </label>
                           <EditorProvider>
                             <Editor
@@ -330,7 +347,7 @@ export default function EditNewsPage() {
                 {/* الصور */}
                 <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                   <label className="mb-[10px] text-black dark:text-white font-medium block">
-                    صور الخبر
+                    الصور الخاصة بالمنتج
                   </label>
 
                   <div id="fileUploader">
