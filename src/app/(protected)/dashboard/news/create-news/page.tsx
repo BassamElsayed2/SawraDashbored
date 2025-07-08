@@ -44,6 +44,10 @@ type NewsFormValues = {
   images: File[];
   price?: number;
   offers?: number;
+
+  price_medium?: number;
+  price_large?: number;
+  price_family?: number;
 };
 
 const CreateNewsForm: React.FC = () => {
@@ -64,6 +68,17 @@ const CreateNewsForm: React.FC = () => {
 
   const { errors } = formState;
 
+  const [selectedCategoryName, setSelectedCategoryName] = useState("");
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    const selected = categories?.find(
+      (cat) => cat.id.toString() === selectedId
+    );
+    setSelectedCategoryName(selected?.name_en.toLowerCase() || "");
+    setValue("category_id", selectedId as UUID);
+  };
+
   useEffect(() => {
     async function fetchUser() {
       const user = await getCurrentUser();
@@ -79,7 +94,7 @@ const CreateNewsForm: React.FC = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: CreateNews,
     onSuccess: () => {
-      toast.success("تم نشر الخبر بنجاح");
+      toast.success("تم نشر المنتج بنجاح");
       queryClient.invalidateQueries({ queryKey: ["news"] });
       router.push("/dashboard/news");
     },
@@ -151,7 +166,16 @@ const CreateNewsForm: React.FC = () => {
       const finalData = {
         ...data,
         user_id: userId,
+        category_id: data.category_id, // UUID
         images: uploadedImageUrls,
+
+        // تأكد من تحويل القيم الرقمية
+        price: data.price ? Number(data.price) : undefined,
+        offers: data.offers ? Number(data.offers) : undefined,
+
+        price_medium: data.price_medium ? Number(data.price_medium) : undefined,
+        price_large: data.price_large ? Number(data.price_large) : undefined,
+        price_family: data.price_family ? Number(data.price_family) : undefined,
       };
 
       mutate(finalData);
@@ -166,7 +190,7 @@ const CreateNewsForm: React.FC = () => {
   return (
     <>
       <div className="mb-[25px] md:flex items-center justify-between">
-        <h5 className="!mb-0"> انشاء خبر</h5>
+        <h5 className="!mb-0"> انشاء منتج</h5>
 
         <ol className="breadcrumb mt-[12px] md:mt-0 rtl:flex-row-reverse">
           <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
@@ -181,10 +205,10 @@ const CreateNewsForm: React.FC = () => {
             </Link>
           </li>
           <li className="breadcrumb-item inline-block  relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
-            الاخبار
+            المنتجات
           </li>
           <li className="breadcrumb-item inline-block  relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
-            انشاء خبر
+            انشاء منتج
           </li>
         </ol>
       </div>
@@ -194,7 +218,7 @@ const CreateNewsForm: React.FC = () => {
             <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
               <div className="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
                 <div className="trezo-card-title">
-                  <h5 className="!mb-0">أضف خبر</h5>
+                  <h5 className="!mb-0">أضف منتج</h5>
                 </div>
               </div>
 
@@ -202,7 +226,7 @@ const CreateNewsForm: React.FC = () => {
                 <div className="sm:grid sm:grid-cols-2 sm:gap-[25px]">
                   <div className="mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      عنوان الخبر (بالعربي)
+                      عنوان المنتج (بالعربي)
                     </label>
                     <input
                       type="text"
@@ -210,7 +234,7 @@ const CreateNewsForm: React.FC = () => {
                       placeholder="يجب الايزيد عن 100 حرف"
                       id="title_ar"
                       {...register("title_ar", {
-                        required: "يجب ادخال عنوان الخبر",
+                        required: "يجب ادخال عنوان المنتج",
                         max: {
                           value: 100,
                           message: "يجب الايزيد عن 100 حرف",
@@ -225,7 +249,7 @@ const CreateNewsForm: React.FC = () => {
                   </div>
                   <div className="mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      عنوان الخبر (بالانجليزي)
+                      عنوان المنتج (بالانجليزي)
                     </label>
                     <input
                       type="text"
@@ -233,7 +257,7 @@ const CreateNewsForm: React.FC = () => {
                       placeholder="يجب الايزيد عن 100 حرف"
                       id="title_en"
                       {...register("title_en", {
-                        required: "يجب ادخال عنوان الخبر",
+                        required: "يجب ادخال عنوان المنتج",
                         max: {
                           value: 100,
                           message: "يجب الايزيد عن 100 حرف",
@@ -256,6 +280,7 @@ const CreateNewsForm: React.FC = () => {
                     <select
                       className="h-[55px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
                       {...register("category_id")}
+                      onChange={handleCategoryChange}
                     >
                       {categories?.map((category) => (
                         <option
@@ -277,7 +302,6 @@ const CreateNewsForm: React.FC = () => {
                       {...register("status")}
                     >
                       <option value="">(اختياري) اختر الحالة</option>
-                      <option value="important">مهم</option>
 
                       <option value="trend">رائج</option>
                       <option value="most_sold">الاكثر مبيعا</option>
@@ -286,7 +310,7 @@ const CreateNewsForm: React.FC = () => {
 
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      تفاصيل (بالعربي)
+                      المكونات (بالعربي)
                     </label>
                     <EditorProvider>
                       <Editor
@@ -325,7 +349,7 @@ const CreateNewsForm: React.FC = () => {
 
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      تفاصيل (بالانجليزي)
+                      المكونات (بالانجليزي)
                     </label>
                     <EditorProvider>
                       <Editor
@@ -375,23 +399,140 @@ const CreateNewsForm: React.FC = () => {
                     />
                   </div>
 
-                  <div className="mb-[20px] sm:mb-0">
-                    <label className="mb-[10px] text-black dark:text-white font-medium block">
-                      السعر
-                    </label>
-                    <input
-                      type="number"
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
-                      placeholder="أدخل السعر (اجباري)"
-                      id="price"
-                      {...register("price", { required: "يجب ادخال السعر" })}
-                    />
-                    {errors?.price?.message && (
-                      <span className="text-red-700 text-sm">
-                        {errors.price.message}
-                      </span>
-                    )}
-                  </div>
+                  {selectedCategoryName === "crepe" ||
+                  selectedCategoryName === "crepe pizza" ? (
+                    <>
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر مثلث الحجم المتوسط
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price", {
+                            required: "ادخل السعر المتوسط",
+                          })}
+                        />
+                      </div>
+
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر مثلث الحجم الكبير
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_medium", {
+                            required: "ادخل السعر الكبير",
+                          })}
+                        />
+                      </div>
+
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر رول الحجم المتوسط
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_large", {
+                            required: "ادخل السعر المتوسط",
+                          })}
+                        />
+                      </div>
+
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر رول الحجم الكبير
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_family", {
+                            required: "ادخل السعر الكبير",
+                          })}
+                        />
+                      </div>
+                    </>
+                  ) : selectedCategoryName === "pizza" ? (
+                    <>
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر الحجم الصغير
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price", {
+                            required: "ادخل السعر الصغير",
+                          })}
+                        />
+                      </div>
+
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر الحجم المتوسط
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_medium", {
+                            required: "ادخل السعر المتوسط",
+                          })}
+                        />
+                      </div>
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر الحجم الكبير
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_large", {
+                            required: "ادخل السعر الكبير",
+                          })}
+                        />
+                      </div>
+                    </>
+                  ) : selectedCategoryName === "sandwiches" ? (
+                    <>
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر الحجم المتوسط
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_medium", {
+                            required: "ادخل السعر المتوسط",
+                          })}
+                        />
+                      </div>
+                      <div className="mb-[20px]">
+                        <label className="mb-[10px] block font-medium text-black dark:text-white">
+                          سعر الحجم الكبير
+                        </label>
+                        <input
+                          type="number"
+                          className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                          {...register("price_large", {
+                            required: "ادخل السعر الكبير",
+                          })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mb-[20px]">
+                      <label className="mb-[10px] block font-medium text-black dark:text-white">
+                        السعر
+                      </label>
+                      <input
+                        type="number"
+                        className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                        {...register("price", { required: "ادخل السعر" })}
+                      />
+                    </div>
+                  )}
 
                   <div className="mb-[20px] sm:mb-0">
                     <label className="mb-[10px] text-black dark:text-white font-medium block">

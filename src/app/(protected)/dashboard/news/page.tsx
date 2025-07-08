@@ -119,7 +119,7 @@ const NewsListTable: React.FC = () => {
   return (
     <>
       <div className="mb-[25px] md:flex items-center justify-between">
-        <h5 className="!mb-0"> قائمة الاخبار</h5>
+        <h5 className="!mb-0"> قائمة المنتجات</h5>
 
         <ol className="breadcrumb mt-[12px] md:mt-0 rtl:flex-row-reverse">
           <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
@@ -134,7 +134,7 @@ const NewsListTable: React.FC = () => {
             </Link>
           </li>
           <li className="breadcrumb-item inline-block  relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
-            الاخبار
+            المنتجات
           </li>
         </ol>
       </div>
@@ -149,7 +149,7 @@ const NewsListTable: React.FC = () => {
                 <i className="material-symbols-outlined !text-[22px] absolute ltr:-left-[4px] rtl:-right-[4px] top-1/2 -translate-y-1/2">
                   add
                 </i>
-                أضف خبر جديد
+                أضف منتج جديد
               </span>
             </Link>
           </div>
@@ -162,7 +162,7 @@ const NewsListTable: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث عن خبر..."
+              placeholder="ابحث عن منتج..."
               className="w-full p-2 pr-10 border transition border-[#f2f2f2] hover:bg-[#f2f2f2] rounded-lg outline-none dark:border-[#172036] dark:hover:bg-[#172036] dark:bg-[#0c1427] dark:text-white"
             />
             <i className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
@@ -204,7 +204,6 @@ const NewsListTable: React.FC = () => {
             className="w-full p-2 border transition border-[#f2f2f2] hover:bg-[#f2f2f2] rounded-lg outline-none dark:border-[#172036] dark:hover:bg-[#172036] dark:bg-[#0c1427] dark:text-white"
           >
             <option value="">جميع الحالات</option>
-
             <option value="important">مهم</option>
             <option value="trend">رائج</option>
             <option value="most_sold">الاكثر مبيعا</option>
@@ -217,10 +216,10 @@ const NewsListTable: React.FC = () => {
               <thead className="text-black dark:text-white">
                 <tr>
                   {[
-                    "الخبر",
+                    "المنتج",
                     "تاريخ الانشاء",
                     "التصنيف",
-
+                    "السعر",
                     "الحالة",
                     "الاجرائات",
                   ].map((header) => (
@@ -238,7 +237,7 @@ const NewsListTable: React.FC = () => {
                 {news?.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-gray-500">
-                      لا توجد أخبار متاحة
+                      لا توجد منتجات متاحة
                     </td>
                   </tr>
                 ) : (
@@ -280,6 +279,10 @@ const NewsListTable: React.FC = () => {
 
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
                         {categoriesMap[item.category_id] || "غير معروف"}
+                      </td>
+
+                      <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
+                        {item.price}$
                       </td>
 
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
@@ -346,7 +349,7 @@ const NewsListTable: React.FC = () => {
             </table>
             <div className=" flex justify-between">
               <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">
-                عرض {endIndex} أخبار من اجمالي {total} خبر
+                عرض {endIndex} منتجات من اجمالي {total} منتج
               </p>
 
               <div className="mt-4 flex justify-center gap-2">
