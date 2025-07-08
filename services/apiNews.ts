@@ -14,6 +14,11 @@ export interface News {
   created_at?: string;
   id?: string;
   user_id: string;
+  price?: number;
+
+  price_medium?: number;
+  price_large?: number;
+  price_family?: number;
 }
 
 export async function getNews(

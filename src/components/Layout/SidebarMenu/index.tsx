@@ -67,9 +67,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                 <i className="material-symbols-outlined transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px">
                   newspaper
                 </i>
-                <span className="title leading-none">أخبار</span>
+                <span className="title leading-none">المنتجات</span>
               </button>
 
+              {/* المنتجات */}
               <div className="pt-[4px]">
                 <ul className="sidebar-sub-menu">
                   <div
@@ -85,7 +86,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                         }`}
                       >
                         <i className="ri-list-check-2  transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        قائمة الأخبار
+                        قائمة المنتجات
                       </Link>
                     </li>
                   </div>
@@ -104,7 +105,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                         }`}
                       >
                         <i className="ri-newspaper-line  transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        إنشاء الأخبار
+                        إنشاء منتج
                       </Link>
                     </li>
                     <li className="sidemenu-item mb-[4px] last:mb-0">
