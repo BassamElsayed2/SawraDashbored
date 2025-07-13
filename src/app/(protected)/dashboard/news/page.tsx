@@ -20,6 +20,7 @@ const statusLabels: Record<string, string> = {
   normal: "عادي",
   important: "مهم",
   trend: "رائج",
+  offer: "عرض جديد",
   most_sold: "الاكثر مبيعا",
 };
 
@@ -94,11 +95,11 @@ const NewsListTable: React.FC = () => {
   const { mutate } = useMutation({
     mutationFn: deleteNews,
     onSuccess: () => {
-      toast.success("تم حذف الخبر بنجاح");
+      toast.success("تم حذف المنتج بنجاح");
       queryClient.invalidateQueries({ queryKey: ["news"] });
     },
     onError: (err) => {
-      toast.error("حدث خطأ أثناء حذف الخبر");
+      toast.error("حدث خطأ أثناء حذف المنتج");
       console.error(err);
     },
   });
@@ -206,6 +207,7 @@ const NewsListTable: React.FC = () => {
             <option value="">جميع الحالات</option>
             <option value="important">مهم</option>
             <option value="trend">رائج</option>
+            <option value="offer">عرض جديد</option>
             <option value="most_sold">الاكثر مبيعا</option>
           </select>
         </div>
@@ -322,8 +324,52 @@ const NewsListTable: React.FC = () => {
                           <div className="relative group">
                             <button
                               onClick={() => {
-                                console.log("Deleting ID:", item.id);
-                                mutate(item.id as string);
+                                toast(
+                                  (t) => (
+                                    <span>
+                                      هل أنت متأكد أنك تريد حذف هذا المنتج؟
+                                      <div
+                                        style={{
+                                          marginTop: 8,
+                                          display: "flex",
+                                          gap: 8,
+                                        }}
+                                      >
+                                        <button
+                                          onClick={() => {
+                                            mutate(item.id as string);
+                                            toast.dismiss(t.id);
+                                          }}
+                                          style={{
+                                            background: "#ef4444",
+                                            color: "white",
+                                            border: "none",
+                                            padding: "4px 12px",
+                                            borderRadius: 4,
+                                            marginRight: 8,
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          نعم
+                                        </button>
+                                        <button
+                                          onClick={() => toast.dismiss(t.id)}
+                                          style={{
+                                            background: "#e5e7eb",
+                                            color: "#111827",
+                                            border: "none",
+                                            padding: "4px 12px",
+                                            borderRadius: 4,
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          إلغاء
+                                        </button>
+                                      </div>
+                                    </span>
+                                  ),
+                                  { duration: 6000 }
+                                );
                               }}
                               disabled={isPending}
                               className="text-danger-500 leading-none"

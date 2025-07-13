@@ -7,15 +7,22 @@ import supabase from "../../../../../../services/supabase";
 import toast from "react-hot-toast";
 
 type FormData = {
-  title_ar: string;
-  title_en: string;
-  link: string;
+  name_ar: string;
+  name_en: string;
+  area_ar: string;
+  area_en: string;
+  address_ar: string;
+  address_en: string;
+  works_hours: string;
+  phone: string;
+  google_map: string;
+  image: string;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export default function CreateAds() {
+export default function CreateBranch() {
   const router = useRouter();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -76,20 +83,20 @@ export default function CreateAds() {
         const fileName = `${Date.now()}.${fileExt}`;
 
         const { error: imageUploadError } = await supabase.storage
-          .from("adsmedia")
+          .from("branches")
           .upload(fileName, selectedImage);
 
         if (imageUploadError) {
           throw new Error("فشل في رفع الصورة");
         }
 
-        imageUrl = supabase.storage.from("adsmedia").getPublicUrl(fileName)
+        imageUrl = supabase.storage.from("branches").getPublicUrl(fileName)
           .data.publicUrl;
       }
 
       const { error: insertError } = await supabase
-        .from("ads")
-        .insert([{ ...data, image_url: imageUrl }]);
+        .from("branches")
+        .insert([{ ...data, image: imageUrl }]);
 
       if (insertError) {
         throw new Error("حدث خطأ أثناء حفظ البيانات");
@@ -101,8 +108,8 @@ export default function CreateAds() {
         URL.revokeObjectURL(previewImage);
       }
       setPreviewImage(null);
-      toast.success("تم إنشاء المنتج بنجاح");
-      router.push("/dashboard/ads");
+      toast.success("تم إنشاء فرع بنجاح");
+      router.push("/dashboard/branches");
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -117,17 +124,17 @@ export default function CreateAds() {
           <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
             <div className="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
               <div className="trezo-card-title">
-                <h5 className="!mb-0">إنشاء منتج</h5>
+                <h5 className="!mb-0">إنشاء فرع</h5>
               </div>
             </div>
 
             <div className="trezo-card-content sm:grid sm:grid-cols-2 sm:gap-[25px]">
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  العنوان (ar)
+                  اسم الفرع (ar)
                 </label>
                 <input
-                  {...register("title_ar", {
+                  {...register("name_ar", {
                     minLength: {
                       value: 3,
                       message: "العنوان يجب أن يكون 3 أحرف على الأقل",
@@ -135,17 +142,90 @@ export default function CreateAds() {
                   })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
                 />
-                {errors.title_ar && (
-                  <p className="text-red-500 mt-1">{errors.title_ar.message}</p>
+                {errors.name_ar && (
+                  <p className="text-red-500 mt-1">{errors.name_ar.message}</p>
                 )}
               </div>
 
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  اسم الفرع (en)
+                </label>
+                <input
+                  {...register("name_en", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.name_en && (
+                  <p className="text-red-500 mt-1">{errors.name_en.message}</p>
+                )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  اسم المنطقة (ar)
+                </label>
+                <input
+                  {...register("area_ar", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.area_ar && (
+                  <p className="text-red-500 mt-1">{errors.area_ar.message}</p>
+                )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  اسم المنطقة (en)
+                </label>
+                <input
+                  {...register("area_en", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.area_en && (
+                  <p className="text-red-500 mt-1">{errors.area_en.message}</p>
+                )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  العنوان(ar)
+                </label>
+                <input
+                  {...register("address_ar", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.address_ar && (
+                  <p className="text-red-500 mt-1">
+                    {errors.address_ar.message}
+                  </p>
+                )}
+              </div>
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
                   العنوان (en)
                 </label>
                 <input
-                  {...register("title_en", {
+                  {...register("address_en", {
                     minLength: {
                       value: 3,
                       message: "العنوان يجب أن يكون 3 أحرف على الأقل",
@@ -153,27 +233,68 @@ export default function CreateAds() {
                   })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
                 />
-                {errors.title_en && (
-                  <p className="text-red-500 mt-1">{errors.title_en.message}</p>
+                {errors.address_en && (
+                  <p className="text-red-500 mt-1">
+                    {errors.address_en.message}
+                  </p>
                 )}
               </div>
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  رابط المنتج
+                  ساعات العمل
                 </label>
                 <input
-                  {...register("link", {
-                    pattern: {
-                      value:
-                        /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
-                      message: "الرجاء إدخال رابط صحيح",
+                  {...register("works_hours", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
                     },
                   })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
                 />
-                {errors.link && (
-                  <p className="text-red-500 mt-1">{errors.link.message}</p>
+                {errors.works_hours && (
+                  <p className="text-red-500 mt-1">
+                    {errors.works_hours.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  رقم الهاتف
+                </label>
+                <input
+                  {...register("phone", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.phone && (
+                  <p className="text-red-500 mt-1">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  الموقع الجغرافي (google map)
+                </label>
+                <input
+                  {...register("google_map", {
+                    minLength: {
+                      value: 3,
+                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                    },
+                  })}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+                {errors.google_map && (
+                  <p className="text-red-500 mt-1">
+                    {errors.google_map.message}
+                  </p>
                 )}
               </div>
 
