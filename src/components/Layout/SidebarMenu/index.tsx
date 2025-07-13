@@ -197,7 +197,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                   paid
                 </span>
 
-                <span className="title leading-none">أعلانات</span>
+                <span className="title leading-none">الوجهة الامامية</span>
               </button>
 
               <div className="pt-[4px]">
@@ -215,7 +215,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                         }`}
                       >
                         <i className="ri-menu-search-line  transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        قائمة الأعلانات
+                        قائمة الوجهة الامامية
                       </Link>
                     </li>
                   </div>
@@ -234,7 +234,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                         }`}
                       >
                         <i className="ri-file-add-line transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        إنشاء أعلان
+                        إنشاء صور للوجهة الامامية
                       </Link>
                     </li>
                   </div>

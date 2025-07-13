@@ -12,7 +12,6 @@ export interface Ad {
   title_ar: string;
   title_en: string;
   image_url: string;
-  location: string;
   created_at: string;
   link: string;
 }
@@ -21,13 +20,11 @@ type FormData = {
   title_ar: string;
   title_en: string;
   link: string;
-  location: string;
 };
 
 const AdsList: React.FC = () => {
   const [adsList, setAdsList] = useState<Ad[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
@@ -71,7 +68,7 @@ const AdsList: React.FC = () => {
         .single();
 
       if (fetchError) {
-        throw new Error("فشل في جلب بيانات الإعلان");
+        throw new Error("فشل في جلب بيانات المنتج");
       }
 
       // Extract the file path from the image URL
@@ -98,11 +95,11 @@ const AdsList: React.FC = () => {
         .eq("id", id);
 
       if (deleteError) {
-        throw new Error("فشل في حذف الإعلان");
+        throw new Error("فشل في حذف المنتج");
       }
 
       setAdsList((prev) => prev.filter((ad) => ad.id !== id));
-      toast.success("تم حذف الإعلان والصورة بنجاح");
+      toast.success("تم حذف المنتج والصورة بنجاح");
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -113,7 +110,6 @@ const AdsList: React.FC = () => {
     setValue("title_ar", ad.title_ar);
     setValue("title_en", ad.title_en);
     setValue("link", ad.link);
-    setValue("location", ad.location);
     setPreviewImage(ad.image_url);
     setIsEditModalOpen(true);
   };
@@ -164,7 +160,7 @@ const AdsList: React.FC = () => {
         )
       );
 
-      toast.success("تم تحديث الإعلان بنجاح");
+      toast.success("تم تحديث المنتج بنجاح");
       setIsEditModalOpen(false);
       reset();
       setSelectedImage(null);
@@ -182,8 +178,7 @@ const AdsList: React.FC = () => {
     const matchesSearch =
       ad.title_ar.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ad.title_en.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = !locationFilter || ad.location === locationFilter;
-    return matchesSearch && matchesLocation;
+    return matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredAds.length / adsPerPage);
@@ -191,9 +186,6 @@ const AdsList: React.FC = () => {
     (currentPage - 1) * adsPerPage,
     currentPage * adsPerPage
   );
-
-  // Get unique locations for filter dropdown
-  const uniqueLocations = Array.from(new Set(adsList.map((ad) => ad.location)));
 
   return (
     <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
@@ -203,7 +195,7 @@ const AdsList: React.FC = () => {
             <div className="relative flex-1 sm:flex-none">
               <input
                 type="text"
-                placeholder="ابحث عن إعلان..."
+                placeholder="ابحث عن منتج..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-[#15203c] dark:text-white"
@@ -212,18 +204,6 @@ const AdsList: React.FC = () => {
                 search
               </i>
             </div>
-            <select
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-[#15203c] dark:text-white"
-            >
-              <option value="">كل المواقع</option>
-              {uniqueLocations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
           </div>
           <Link
             href="/dashboard/ads/create-ads"
@@ -233,7 +213,7 @@ const AdsList: React.FC = () => {
               <i className="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2">
                 add
               </i>
-              أضف أعلان جديد
+              أضف منتج جديد
             </span>
           </Link>
         </div>
@@ -242,16 +222,14 @@ const AdsList: React.FC = () => {
           <table className="w-full">
             <thead className="text-black dark:text-white text-end">
               <tr>
-                {["العنوان", "الصوره", "مكان النشر", "التاريخ", "أجرأت"].map(
-                  (head, i) => (
-                    <th
-                      key={i}
-                      className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] bg-gray-50 dark:bg-[#15203c]"
-                    >
-                      {head}
-                    </th>
-                  )
-                )}
+                {["العنوان", "الصوره", "التاريخ", "أجرأت"].map((head, i) => (
+                  <th
+                    key={i}
+                    className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] bg-gray-50 dark:bg-[#15203c]"
+                  >
+                    {head}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -269,9 +247,6 @@ const AdsList: React.FC = () => {
                       height={40}
                       className="rounded"
                     />
-                  </td>
-                  <td className="py-3 px-3">
-                    {ad.location === "home" ? "الرئيسية" : "أخرى"}
                   </td>
                   <td className="py-3 px-3">
                     {new Date(ad.created_at).toLocaleDateString("ar-EG")}
@@ -300,7 +275,7 @@ const AdsList: React.FC = () => {
               ))}
               {paginatedAds.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-5 text-center text-gray-400">
+                  <td colSpan={4} className="py-5 text-center text-gray-400">
                     No ads found.
                   </td>
                 </tr>
@@ -368,23 +343,6 @@ const AdsList: React.FC = () => {
                       className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
                     />
                     {errors.link && <p className="text-red-500 mt-1">مطلوب</p>}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      مكان الإعلان
-                    </label>
-                    <select
-                      {...register("location", { required: true })}
-                      className="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 cursor-pointer transition-all"
-                    >
-                      <option value="">اختر مكان الإعلان</option>
-                      <option value="home">الرئيسية</option>
-                      <option value="other">أخرى</option>
-                    </select>
-                    {errors.location && (
-                      <p className="text-red-500 mt-1">مطلوب</p>
-                    )}
                   </div>
 
                   <div className="sm:col-span-2">
