@@ -4,22 +4,23 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
-import { getGalleries } from "../../services/apiGallery";
+
+import { getComboOffers } from "../../services/apiComboOffers";
 
 const RecentProperty: React.FC = () => {
-  const { data: galleries } = useQuery({
-    queryKey: ["galleries"],
-    queryFn: () => getGalleries(),
+  const { data: comboOffers } = useQuery({
+    queryKey: ["comboOffers"],
+    queryFn: () => getComboOffers(),
   });
 
-  if (galleries?.length === 0) return <div>لا يوجد معارض</div>;
+  if (comboOffers?.length === 0) return <div>لا يوجد عروض</div>;
 
   return (
     <>
       <div className="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
         <div className="trezo-card-header mb-[15px] flex items-center justify-between">
           <div className="trezo-card-title">
-            <h5 className="!mb-0">المعارض الأخيرة</h5>
+            <h5 className="!mb-0">العروض الأخيرة</h5>
           </div>
         </div>
 
@@ -35,19 +36,19 @@ const RecentProperty: React.FC = () => {
             }}
             modules={[Autoplay, Pagination]}
           >
-            {galleries?.slice(0, 3).map((gallery) => (
-              <SwiperSlide key={gallery.id}>
+            {comboOffers?.slice(0, 3).map((comboOffer) => (
+              <SwiperSlide key={comboOffer.id}>
                 <div
                   className="rounded-[5px] h-[112px] bg-cover bg-no-repeat bg-center"
                   style={{
-                    backgroundImage: `url(${gallery.image_urls[0]})`,
+                    backgroundImage: `url(${comboOffer.image_url})`,
                   }}
                 ></div>
 
                 <div className="flex items-center justify-between mb-[8px] mt-[15px]">
                   <h3 className="!text-lg !mb-0 !text-orange-500">
-                    <Link href={`/dashboard/images-gallery`}>
-                      {gallery.title_ar}
+                    <Link href={`/dashboard/combo-offers`}>
+                      {comboOffer.title_ar}
                     </Link>
                   </h3>
                 </div>
