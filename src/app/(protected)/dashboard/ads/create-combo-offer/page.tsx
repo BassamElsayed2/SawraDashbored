@@ -3,24 +3,31 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import supabase from "../../../../../../services/supabase";
+import { useMutation } from "@tanstack/react-query";
+import {
+  createComboOffer,
+  uploadComboOfferImage,
+} from "../../../../../../services/apiComboOffers";
 import toast from "react-hot-toast";
 
 type FormData = {
   title_ar: string;
   title_en: string;
-  link: string;
+  description_ar: string;
+  description_en: string;
+  total_price: number;
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export default function CreateAds() {
+export default function CreateComboOffer() {
   const router = useRouter();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -28,6 +35,23 @@ export default function CreateAds() {
     formState: { errors },
     reset,
   } = useForm<FormData>();
+
+  const createMutation = useMutation({
+    mutationFn: createComboOffer,
+    onSuccess: () => {
+      reset();
+      setSelectedImage(null);
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+      setPreviewImage(null);
+      toast.success("تم إنشاء العرض بنجاح");
+      router.push("/dashboard/ads");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   // Cleanup preview URL when component unmounts
   useEffect(() => {
@@ -66,47 +90,23 @@ export default function CreateAds() {
   };
 
   const onSubmit = async (data: FormData) => {
-    setLoading(true);
-
     try {
       let imageUrl = null;
 
       if (selectedImage) {
-        const fileExt = selectedImage.name.split(".").pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: imageUploadError } = await supabase.storage
-          .from("adsmedia")
-          .upload(fileName, selectedImage);
-
-        if (imageUploadError) {
-          throw new Error("فشل في رفع الصورة");
-        }
-
-        imageUrl = supabase.storage.from("adsmedia").getPublicUrl(fileName)
-          .data.publicUrl;
+        imageUrl = await uploadComboOfferImage(selectedImage);
       }
 
-      const { error: insertError } = await supabase
-        .from("ads")
-        .insert([{ ...data, image_url: imageUrl }]);
+      const insertData = {
+        ...data,
+        image_url: imageUrl,
+        starts_at: data.starts_at || null,
+        ends_at: data.ends_at || null,
+      };
 
-      if (insertError) {
-        throw new Error("حدث خطأ أثناء حفظ البيانات");
-      }
-
-      reset();
-      setSelectedImage(null);
-      if (previewImage) {
-        URL.revokeObjectURL(previewImage);
-      }
-      setPreviewImage(null);
-      toast.success("تم إنشاء المنتج بنجاح");
-      router.push("/dashboard/ads");
+      await createMutation.mutateAsync(insertData);
     } catch (error) {
       toast.error((error as Error).message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -117,7 +117,7 @@ export default function CreateAds() {
           <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
             <div className="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
               <div className="trezo-card-title">
-                <h5 className="!mb-0">إنشاء منتج</h5>
+                <h5 className="!mb-0">إنشاء عرض جديد</h5>
               </div>
             </div>
 
@@ -128,6 +128,7 @@ export default function CreateAds() {
                 </label>
                 <input
                   {...register("title_ar", {
+                    required: "العنوان مطلوب",
                     minLength: {
                       value: 3,
                       message: "العنوان يجب أن يكون 3 أحرف على الأقل",
@@ -146,6 +147,7 @@ export default function CreateAds() {
                 </label>
                 <input
                   {...register("title_en", {
+                    required: "العنوان مطلوب",
                     minLength: {
                       value: 3,
                       message: "العنوان يجب أن يكون 3 أحرف على الأقل",
@@ -160,26 +162,77 @@ export default function CreateAds() {
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  رابط المنتج
+                  الوصف (ar)
+                </label>
+                <textarea
+                  {...register("description_ar")}
+                  rows={3}
+                  className="rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] py-[12px] block w-full outline-0 transition-all"
+                  placeholder="وصف العرض باللغة العربية..."
+                />
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  الوصف (en)
+                </label>
+                <textarea
+                  {...register("description_en")}
+                  rows={3}
+                  className="rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] py-[12px] block w-full outline-0 transition-all"
+                  placeholder="وصف العرض باللغة الإنجليزية..."
+                />
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  السعر الإجمالي
                 </label>
                 <input
-                  {...register("link", {
-                    pattern: {
-                      value:
-                        /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
-                      message: "الرجاء إدخال رابط صحيح",
+                  type="number"
+                  step="0.01"
+                  {...register("total_price", {
+                    required: "السعر مطلوب",
+                    min: {
+                      value: 0,
+                      message: "السعر يجب أن يكون أكبر من صفر",
                     },
                   })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                  placeholder="0.00"
                 />
-                {errors.link && (
-                  <p className="text-red-500 mt-1">{errors.link.message}</p>
+                {errors.total_price && (
+                  <p className="text-red-500 mt-1">
+                    {errors.total_price.message}
+                  </p>
                 )}
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  تاريخ البداية
+                </label>
+                <input
+                  type="date"
+                  {...register("starts_at")}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
+              </div>
+
+              <div className="mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  تاريخ النهاية
+                </label>
+                <input
+                  type="date"
+                  {...register("ends_at")}
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                />
               </div>
 
               <div className="sm:col-span-2">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  اختر الصوره (اختياري)
+                  اختر الصورة (اختياري)
                 </label>
                 <div className="relative flex items-center justify-center overflow-hidden rounded-md py-[65px] px-[20px] border border-gray-200 dark:border-[#172036]">
                   <div className="flex items-center justify-center">
@@ -231,10 +284,10 @@ export default function CreateAds() {
             <div className="mt-[20px] sm:mt-[25px]">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={createMutation.isPending}
                 className="font-medium inline-block transition-all rounded-md 2xl:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50"
               >
-                {loading ? "جارٍ الإرسال..." : "إنشاء"}
+                {createMutation.isPending ? "جارٍ الإرسال..." : "إنشاء العرض"}
               </button>
             </div>
           </div>
