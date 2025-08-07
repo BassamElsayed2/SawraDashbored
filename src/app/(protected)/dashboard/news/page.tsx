@@ -4,31 +4,15 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteNews, getNews } from "../../../../../services/apiNews";
+import {
+  deleteProduct,
+  getProducts,
+} from "../../../../../services/apiProducts";
 import { getCategories } from "../../../../../services/apiCategories";
 import toast from "react-hot-toast";
 
-const statusColors: Record<string, string> = {
-  normal: "bg-primary-50 dark:bg-[#15203c] text-primary-500",
-  important: "bg-success-50 dark:bg-[#15203c] text-success-500",
-  urgent: "bg-danger-50 dark:bg-[#15203c] text-danger-500",
-  trend: "bg-pink-50 dark:bg-[#15203c] text-danger-500",
-  most_sold: "bg-danger-50 dark:bg-[#15203c] text-danger-500",
-};
-
-const statusLabels: Record<string, string> = {
-  normal: "عادي",
-  important: "مهم",
-  trend: "رائج",
-  offer: "عرض جديد",
-  most_sold: "الاكثر مبيعا",
-};
-
-const NewsListTable: React.FC = () => {
+const ProductListTable: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
-    undefined
-  );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<string>("");
@@ -48,23 +32,21 @@ const NewsListTable: React.FC = () => {
 
   const { isPending, data } = useQuery({
     queryKey: [
-      "news",
+      "products",
       currentPage,
       selectedCategory,
-      selectedStatus,
       debouncedSearchQuery,
       dateFilter,
     ],
     queryFn: () =>
-      getNews(currentPage, pageSize, {
+      getProducts(currentPage, pageSize, {
         categoryId: selectedCategory,
-        status: selectedStatus,
         search: debouncedSearchQuery,
         date: dateFilter,
       }),
   });
 
-  const news = data?.news || [];
+  const products = data?.products || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
 
@@ -77,9 +59,9 @@ const NewsListTable: React.FC = () => {
       try {
         const categories = await getCategories();
         // نبني خريطة id => category name
-        const map: Record<number, string> = {};
+        const map: Record<string, string> = {};
         categories.forEach((cat) => {
-          map[cat.id] = cat.name_ar;
+          map[cat.id.toString()] = cat.name_ar;
         });
         setCategoriesMap(map);
       } catch (err) {
@@ -93,10 +75,10 @@ const NewsListTable: React.FC = () => {
   const queryClient = useQueryClient();
 
   const { mutate } = useMutation({
-    mutationFn: deleteNews,
+    mutationFn: deleteProduct,
     onSuccess: () => {
       toast.success("تم حذف المنتج بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["news"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: (err) => {
       toast.error("حدث خطأ أثناء حذف المنتج");
@@ -108,7 +90,44 @@ const NewsListTable: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedStatus, searchQuery, dateFilter]);
+  }, [selectedCategory, searchQuery, dateFilter]);
+
+  // Helper function to get price range for a product
+  const getPriceRange = (product: {
+    types?: Array<{ sizes?: Array<{ price: number }> }>;
+  }) => {
+    if (!product.types || product.types.length === 0) {
+      return "غير محدد";
+    }
+
+    let minPrice = Infinity;
+    let maxPrice = -Infinity;
+
+    product.types.forEach((type) => {
+      if (type.sizes && type.sizes.length > 0) {
+        type.sizes.forEach((size) => {
+          if (size.price < minPrice) minPrice = size.price;
+          if (size.price > maxPrice) maxPrice = size.price;
+        });
+      }
+    });
+
+    if (minPrice === Infinity || maxPrice === -Infinity) {
+      return "غير محدد";
+    }
+
+    if (minPrice === maxPrice) {
+      return `${minPrice}$`;
+    }
+
+    return `${minPrice}$ - ${maxPrice}$`;
+  };
+
+  // Helper function to get types count
+  const getTypesCount = (product: { types?: Array<unknown> }) => {
+    if (!product.types) return 0;
+    return product.types.length;
+  };
 
   if (isPending)
     return (
@@ -156,7 +175,7 @@ const NewsListTable: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search Bar */}
           <div className="relative">
             <input
@@ -197,19 +216,6 @@ const NewsListTable: React.FC = () => {
               </option>
             ))}
           </select>
-
-          {/* Status Filter */}
-          <select
-            value={selectedStatus ?? ""}
-            onChange={(e) => setSelectedStatus(e.target.value || undefined)}
-            className="w-full p-2 border transition border-[#f2f2f2] hover:bg-[#f2f2f2] rounded-lg outline-none dark:border-[#172036] dark:hover:bg-[#172036] dark:bg-[#0c1427] dark:text-white"
-          >
-            <option value="">جميع الحالات</option>
-            <option value="important">مهم</option>
-            <option value="trend">رائج</option>
-            <option value="offer">عرض جديد</option>
-            <option value="most_sold">الاكثر مبيعا</option>
-          </select>
         </div>
 
         <div className="trezo-card-content">
@@ -221,8 +227,8 @@ const NewsListTable: React.FC = () => {
                     "المنتج",
                     "تاريخ الانشاء",
                     "التصنيف",
-                    "السعر",
-                    "الحالة",
+                    "الأنواع",
+                    "نطاق السعر",
                     "الاجرائات",
                   ].map((header) => (
                     <th
@@ -236,22 +242,22 @@ const NewsListTable: React.FC = () => {
               </thead>
 
               <tbody className="text-black dark:text-white">
-                {news?.length === 0 ? (
+                {products?.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-500">
+                    <td colSpan={6} className="text-center py-8 text-gray-500">
                       لا توجد منتجات متاحة
                     </td>
                   </tr>
                 ) : (
-                  news?.map((item) => (
+                  products?.map((item) => (
                     <tr key={item.id}>
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
                         <div className="flex items-center text-black dark:text-white transition-all hover:text-primary-500">
                           <div className="relative w-[40px] h-[40px]">
                             <Image
-                              className="rounded-md"
-                              alt="event-image"
-                              src={item?.images?.[0] || "/placeholder.png"}
+                              className="rounded-md object-cover w-full h-full"
+                              alt="product-image"
+                              src={item?.image_url || "/placeholder.png"}
                               width={40}
                               height={40}
                               onError={(e) => {
@@ -284,19 +290,14 @@ const NewsListTable: React.FC = () => {
                       </td>
 
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
-                        {item.price}$
+                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs">
+                          {getTypesCount(item)} نوع
+                        </span>
                       </td>
 
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
-                        <span
-                          className={`px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs dark:bg-[#15203c] ${
-                            statusColors[item.status || "normal"] ??
-                            statusColors["normal"]
-                          }`}
-                        >
-                          {item.status === "" || item.status == null
-                            ? statusLabels["normal"]
-                            : statusLabels[item.status] || item.status}
+                        <span className="font-medium text-green-600 dark:text-green-400">
+                          {getPriceRange(item)}
                         </span>
                       </td>
 
@@ -437,4 +438,4 @@ const NewsListTable: React.FC = () => {
   );
 };
 
-export default NewsListTable;
+export default ProductListTable;

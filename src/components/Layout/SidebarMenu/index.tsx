@@ -197,7 +197,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                   paid
                 </span>
 
-                <span className="title leading-none">الوجهة الامامية</span>
+                <span className="title leading-none">العروض</span>
               </button>
 
               <div className="pt-[4px]">
@@ -215,7 +215,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                         }`}
                       >
                         <i className="ri-menu-search-line  transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        قائمة الوجهة الامامية
+                        قائمة العروض
                       </Link>
                     </li>
                   </div>
@@ -226,15 +226,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                   >
                     <li className="sidemenu-item mb-[4px] last:mb-0">
                       <Link
-                        href="/dashboard/ads/create-ads"
+                        href="/dashboard/ads/create-combo-offer"
                         className={`sidemenu-link rounded-md flex items-center relative transition-all font-medium text-gray-500 dark:text-gray-400 py-[9px] ltr:pl-[38px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] hover:text-primary-500 hover:bg-primary-50 w-full text-left dark:hover:bg-[#15203c] ${
-                          pathname === "/dashboard/ads/create-ads"
+                          pathname === "/dashboard/ads/create-combo-offer"
                             ? "active"
                             : ""
                         }`}
                       >
                         <i className="ri-file-add-line transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
-                        إنشاء صور للوجهة الامامية
+                        إنشاء عرض
                       </Link>
                     </li>
                   </div>
