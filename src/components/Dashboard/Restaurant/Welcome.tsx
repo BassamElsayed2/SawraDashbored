@@ -4,20 +4,21 @@ import React from "react";
 import Image from "next/image";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { useQuery } from "@tanstack/react-query";
-import { getNews } from "../../../../services/apiNews";
-import { getGalleries } from "../../../../services/apiGallery";
+
+import { getProducts } from "../../../../services/apiProducts";
+import { getComboOffers } from "../../../../services/apiComboOffers";
 
 const Welcome: React.FC = () => {
   const { data: profile } = useAdminProfile();
 
-  const { data: news } = useQuery({
-    queryKey: ["news"],
-    queryFn: () => getNews(),
+  const { data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => getProducts(),
   });
 
-  const { data: galleries } = useQuery({
-    queryKey: ["galleries"],
-    queryFn: () => getGalleries(),
+  const { data: comboOffers } = useQuery({
+    queryKey: ["comboOffers"],
+    queryFn: () => getComboOffers(),
   });
 
   return (
@@ -39,9 +40,9 @@ const Welcome: React.FC = () => {
                   <i className="material-symbols-outlined absolute ltr:left-0 rtl:right-0 text-white top-[2px]">
                     order_approve
                   </i>
-                  <span className="block text-white">المقالات</span>
+                  <span className="block text-white">المنتجات</span>
                   <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {news?.total}+
+                    {products?.total}+
                   </h6>
                 </div>
 
@@ -49,9 +50,9 @@ const Welcome: React.FC = () => {
                   <i className="material-symbols-outlined absolute ltr:left-0 rtl:right-0 text-white top-[2px]">
                     photo_camera
                   </i>
-                  <span className="block text-white">المعارض</span>
+                  <span className="block text-white">العروض</span>
                   <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {galleries?.length}+
+                    {comboOffers?.length}+
                   </h6>
                 </div>
               </div>
