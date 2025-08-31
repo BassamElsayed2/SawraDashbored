@@ -35,6 +35,35 @@ export const defaultQROptions: QRCodeOptions = {
   type: "image/png",
 };
 
+// Utility function to get base URL
+export const getBaseUrl = (): string => {
+  // Try to get the base URL from environment variable first
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  // If not available, try to get it from window.location (client-side)
+  if (!baseUrl && typeof window !== "undefined") {
+    baseUrl = window.location.origin;
+  }
+
+  // Fallback to localhost for development
+  if (!baseUrl) {
+    baseUrl = "http://localhost:3000";
+  }
+
+  return baseUrl;
+};
+
+// Utility function to validate and clean URL
+export const validateAndCleanUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.origin;
+  } catch {
+    console.warn("Invalid URL provided, using fallback:", url);
+    return "http://localhost:3000";
+  }
+};
+
 // QR Code generation utility class
 export class QRCodeGenerator {
   private static instance: QRCodeGenerator;
@@ -132,7 +161,7 @@ export class QRCodeGenerator {
    * Generate survey URL for a specific branch
    */
   public generateSurveyURL(branchId: string): string {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = getBaseUrl();
     return `${baseUrl}/feedback-survey/${branchId}`;
   }
 
