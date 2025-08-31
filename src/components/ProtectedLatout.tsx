@@ -12,15 +12,15 @@ export default function ProtectedLayout({
 }) {
   const router = useRouter();
 
-  const { isPending, isAuthanticated } = useUser();
+  const { isLoading, isAuthenticated } = useUser();
 
   useEffect(() => {
-    if (!isAuthanticated && !isPending) {
-      router.replace("/authentication/sign-in");
+    if (!isAuthenticated && !isLoading) {
+      router.replace("/");
     }
-  }, [isAuthanticated, isPending, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  if (isPending) return loading();
+  if (isLoading) return loading();
 
   return <>{children}</>;
 }
