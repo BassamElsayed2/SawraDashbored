@@ -1,5 +1,23 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables Setup
+
+Before running the application, you need to set up environment variables. Create a `.env.local` file in the root directory with the following variables:
+
+```bash
+# Application URL for QR codes - Replace with your actual domain
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+
+# Supabase configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Environment
+NODE_ENV=production
+```
+
+**Important:** The `NEXT_PUBLIC_APP_URL` is crucial for QR code generation. Make sure to set it to your actual domain URL.
+
 ## Getting Started
 
 First, run the development server:
