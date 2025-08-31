@@ -24,7 +24,7 @@ export const FeedbackFiltersComponent: React.FC<
 > = ({ filters, branches, onFilterChange, isLoading = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const { control, handleSubmit, reset, watch } = useForm<FilterFormData>({
+  const { control, reset, watch } = useForm<FilterFormData>({
     defaultValues: {
       branchId: filters.branchId || "",
       rating: filters.rating || undefined,

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { apiBranchQR } from "../../services/apiBranchQR";
 import { apiBranches } from "../../services/apiBranches";
 import { Branch, BranchQRCode } from "../types/feedback";
@@ -32,6 +33,12 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
     total_branches: 0,
     qr_generation_stats: { today: 0, this_week: 0, this_month: 0 },
   });
+
+  useEffect(() => {
+    if (isFeatureEnabled("ENABLE_QR_CODE_GENERATION")) {
+      loadData();
+    }
+  }, []);
 
   // Check if feature is enabled
   if (!isFeatureEnabled("ENABLE_QR_CODE_GENERATION")) {
@@ -69,10 +76,6 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
     );
   }
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -87,24 +90,6 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
       setAnalytics(analyticsData);
     } catch (error) {
       console.error("Error loading QR code data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGenerateQRCode = async (branchId: string) => {
-    setLoading(true);
-    try {
-      const newQRCode = await apiBranchQR.generateQRCode(branchId, qrOptions);
-      setQRCodes((prev) => {
-        const existing = prev.find((qr) => qr.branch_id === branchId);
-        if (existing) {
-          return prev.map((qr) => (qr.branch_id === branchId ? newQRCode : qr));
-        }
-        return [...prev, newQRCode];
-      });
-    } catch (error) {
-      console.error("Error generating QR code:", error);
     } finally {
       setLoading(false);
     }
@@ -147,7 +132,7 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
   ) => {
     try {
       if (format === "svg") {
-        const { svg, metadata } = await apiBranchQR.generateQRCodeSVG(
+        const { svg } = await apiBranchQR.generateQRCodeSVG(
           branchId,
           qrOptions
         );
@@ -159,7 +144,7 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        const { buffer, metadata } = await apiBranchQR.generateQRCodeBuffer(
+        const { buffer } = await apiBranchQR.generateQRCodeBuffer(
           branchId,
           qrOptions
         );
@@ -304,7 +289,7 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
               onChange={(e) =>
                 setQROptions((prev) => ({
                   ...prev,
-                  errorCorrectionLevel: e.target.value as any,
+                  errorCorrectionLevel: e.target.value as "L" | "M" | "Q" | "H",
                 }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -368,11 +353,13 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <img
+                      <Image
                         src={qrCode.qr_code_url}
                         alt={`QR Code for ${
                           branch?.name_en || branch?.name_ar
                         }`}
+                        width={64}
+                        height={64}
                         className="w-16 h-16 border border-gray-200 rounded"
                       />
                       <div>

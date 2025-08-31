@@ -745,9 +745,11 @@ const BranchesList: React.FC = () => {
 
               <div className="text-center">
                 <div className="mb-4">
-                  <img
+                  <Image
                     src={selectedQRCode.qr_code_url}
                     alt="QR Code"
+                    width={200}
+                    height={200}
                     className="mx-auto border border-gray-200 rounded-lg"
                     style={{ maxWidth: "200px", maxHeight: "200px" }}
                   />

@@ -66,7 +66,6 @@ export class QRCodeGenerator {
         margin: mergedOptions.margin,
         color: mergedOptions.color,
         errorCorrectionLevel: mergedOptions.errorCorrectionLevel,
-        type: mergedOptions.type,
       });
 
       return qrCodeDataURL;
@@ -95,7 +94,7 @@ export class QRCodeGenerator {
         margin: mergedOptions.margin,
         color: mergedOptions.color,
         errorCorrectionLevel: mergedOptions.errorCorrectionLevel,
-        type: mergedOptions.type,
+        type: "svg",
       });
 
       return qrCodeSVG;
@@ -120,7 +119,6 @@ export class QRCodeGenerator {
         margin: mergedOptions.margin,
         color: mergedOptions.color,
         errorCorrectionLevel: mergedOptions.errorCorrectionLevel,
-        type: mergedOptions.type,
       });
 
       return qrCodeBuffer;
