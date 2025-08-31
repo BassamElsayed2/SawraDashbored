@@ -22,7 +22,7 @@ export interface BranchQRCode {
     generated_at?: string;
     survey_url?: string;
     branch_name?: string;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
   created_at?: string;
   updated_at?: string;

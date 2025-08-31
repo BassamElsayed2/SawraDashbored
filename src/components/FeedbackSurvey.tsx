@@ -133,16 +133,18 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
           updatedData.catering_rating || 4,
         ];
 
-        const categoryIndex = {
-          reception_rating: 0,
-          service_speed_rating: 1,
-          quality_rating: 2,
-          cleanliness_rating: 3,
-          catering_rating: 4,
-        }[category];
+        const categoryMapping = {
+          reception: "reception_rating",
+          order_delivery: "service_speed_rating",
+          service_speed: "service_speed_rating",
+          food_quality: "quality_rating",
+          cleanliness: "cleanliness_rating",
+        } as const;
 
-        if (categoryIndex !== undefined) {
-          ratings[categoryIndex] = rating;
+        const ratingField =
+          categoryMapping[category as keyof typeof categoryMapping];
+        if (ratingField) {
+          updatedData[ratingField] = rating;
           const averageRating = Math.round(
             ratings.reduce((sum, r) => sum + r, 0) / ratings.length
           );
