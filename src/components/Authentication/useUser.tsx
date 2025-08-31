@@ -1,13 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
+"use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "../../../services/apiauth";
 
 export function useUser() {
-  const { data: user, isPending } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: ["user"],
     queryFn: getCurrentUser,
-    enabled: true,
+    retry: false,
   });
 
-  return { user, isPending, isAuthanticated: user?.role === "authenticated" };
+  return {
+    user,
+    isLoading,
+    isAuthenticated: user?.role === "authenticated",
+  };
 }
