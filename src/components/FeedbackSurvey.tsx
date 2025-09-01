@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { apiCustomerFeedback } from "../../services/apiCustomerFeedback";
@@ -22,14 +24,14 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
   const router = useRouter();
   const queryBranchId = searchParams.get("branch_id");
   const modalRef = useRef<HTMLDivElement>(null);
-  const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (modalRef.current) {
       const observer = new ResizeObserver((entries) => {
-        for (let entry of entries) {
+        for (const entry of entries) {
           const { width, height } = entry.contentRect;
-          setModalSize({ width, height });
+          // modalSize is used for potential future features
+          console.log(`Modal size: ${width}x${height}`);
         }
       });
       observer.observe(modalRef.current);
@@ -144,7 +146,10 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let errors: any = {};
+    const errors: { customer_name: string; phone_number: string } = {
+      customer_name: "",
+      phone_number: "",
+    };
     if (!formData.customer_name.trim()) {
       errors.customer_name = "من فضلك أدخل اسمك";
     }
@@ -155,7 +160,7 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
       errors.phone_number = "من فضلك أدخل رقم هاتف صحيح";
     }
 
-    if (Object.keys(errors).length > 0) {
+    if (errors.customer_name || errors.phone_number) {
       setFieldErrors(errors);
       return;
     }
