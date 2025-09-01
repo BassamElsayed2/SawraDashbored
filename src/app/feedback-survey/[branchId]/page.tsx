@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import FeedbackSurvey from "../../../components/FeedbackSurvey";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FeedbackSurveyPageProps {
   params: Promise<{
@@ -10,10 +10,9 @@ interface FeedbackSurveyPageProps {
   }>;
 }
 
-export default function FeedbackSurveyPage({
-  params,
-}: FeedbackSurveyPageProps) {
+export default function FeedbackSurveyPage({ params }: FeedbackSurveyPageProps) {
   const { branchId } = React.use(params);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex flex-col">
@@ -46,23 +45,59 @@ export default function FeedbackSurveyPage({
               </svg>
             </motion.div>
             <div>
-            <h1 className="text-2xl font-extrabold text-white drop-shadow-lg">
-  استطلاع رضا العملاء
-</h1>
+              <p className="text-3xl font-extrabold text-white drop-shadow-lg">
+                استطلاع رضا العملاء
+              </p>
               <p className="text-sm opacity-90">شاركنا رأيك لتحسين تجربتك</p>
             </div>
           </motion.div>
 
           <motion.div
-            className="hidden md:block bg-white text-red-600 px-5 py-2 rounded-full font-semibold shadow hover:scale-105 transition"
+            className="hidden md:block bg-white text-red-600 px-5 py-2 rounded-full font-semibold shadow hover:scale-105 transition cursor-pointer"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
+            onClick={() => setIsOpen(true)}
           >
             تقييم سريع الآن
           </motion.div>
         </div>
       </header>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center relative"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsOpen(false)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-2xl"
+              >
+                &times;
+              </button>
+
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                شكراً على اهتمامك!
+              </h2>
+              <p className="text-gray-600 mb-6">
+                من أجل رضاكم وتلبية طلباتكم ورغبتكم على أكمل وجه، نأمل التكرم بملئ التقييم.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.main
         className="flex-1 py-8 px-4"
@@ -92,8 +127,6 @@ export default function FeedbackSurveyPage({
           >
             تم تطوير هذا النظام لتحسين جودة الخدمة
           </motion.p>
-
-         
         </div>
       </footer>
     </div>
