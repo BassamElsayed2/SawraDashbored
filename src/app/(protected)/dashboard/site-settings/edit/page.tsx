@@ -24,6 +24,11 @@ import {
   Toolbar,
 } from "react-simple-wysiwyg";
 import { useRouter } from "next/navigation";
+import {
+  compressImages,
+  needsCompression,
+  formatFileSize,
+} from "../../../../../../src/lib/image-compression";
 
 const SiteSettings: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -49,11 +54,73 @@ const SiteSettings: React.FC = () => {
 
   // Upload Image
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
+
+      // فحص ما إذا كانت أي من الصور تحتاج ضغط
+      const needsCompressionFiles = filesArray.filter((file) =>
+        needsCompression(file, 600)
+      );
+
+      if (needsCompressionFiles.length > 0) {
+        try {
+          setIsCompressing(true);
+          toast(`جاري ضغط ${needsCompressionFiles.length} صورة...`, {
+            icon: "ℹ️",
+          });
+
+          const compressionResults = await compressImages(filesArray, {
+            maxSizeKB: 600,
+            quality: 0.8,
+            maxWidth: 1920,
+            maxHeight: 1080,
+          });
+
+          // عرض إجمالي معلومات الضغط
+          const totalOriginalSize = compressionResults.reduce(
+            (sum, result) => sum + result.originalSize,
+            0
+          );
+          const totalCompressedSize = compressionResults.reduce(
+            (sum, result) => sum + result.compressedSize,
+            0
+          );
+          const totalCompressionRatio = Math.round(
+            ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) *
+              100
+          );
+
+          toast.success(
+            `تم ضغط الصور بنجاح! الحجم الأصلي: ${formatFileSize(
+              totalOriginalSize
+            )} → الحجم الجديد: ${formatFileSize(
+              totalCompressedSize
+            )} (تم توفير ${totalCompressionRatio}%)`
+          );
+
+          const compressedFiles = compressionResults.map(
+            (result) => result.compressedFile
+          );
+          setSelectedImages((prevImages) => [
+            ...prevImages,
+            ...compressedFiles,
+          ]);
+        } catch (error) {
+          console.error("خطأ في ضغط الصور:", error);
+          toast.error("حدث خطأ أثناء ضغط الصور، سيتم استخدام الصور الأصلية");
+          setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
+        } finally {
+          setIsCompressing(false);
+        }
+      } else {
+        // الصور لا تحتاج ضغط
+        setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
+      }
     }
   };
 

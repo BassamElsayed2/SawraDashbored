@@ -34,6 +34,11 @@ import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import {
+  compressImage,
+  needsCompression,
+  formatFileSize,
+} from "../../../../../../src/lib/image-compression";
 
 interface ProductFormData {
   title_ar: string;
@@ -49,6 +54,7 @@ export default function EditProductPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const router = useRouter();
 
   // Types and Sizes management
@@ -126,10 +132,57 @@ export default function EditProductPage() {
     }
   }, [product, reset]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
-    setSelectedImage(file);
+
+    // التحقق من نوع الملف
+    if (!file.type.startsWith("image/")) {
+      toast.error(`الملف ${file.name} ليس صورة`);
+      return;
+    }
+
+    // التحقق من حجم الملف (50MB كحد أقصى)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(`حجم الصورة ${file.name} يجب أن لا يتجاوز 50MB`);
+      return;
+    }
+
+    try {
+      setIsCompressing(true);
+
+      // فحص ما إذا كانت الصورة تحتاج ضغط
+      if (needsCompression(file, 600)) {
+        toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
+
+        const compressionResult = await compressImage(file, {
+          maxSizeKB: 600,
+          quality: 0.8,
+          maxWidth: 1920,
+          maxHeight: 1080,
+        });
+
+        // عرض معلومات الضغط
+        toast.success(
+          `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
+            compressionResult.originalSize
+          )} → الحجم الجديد: ${formatFileSize(
+            compressionResult.compressedSize
+          )} (تم توفير ${compressionResult.compressionRatio}%)`
+        );
+
+        setSelectedImage(compressionResult.compressedFile);
+      } else {
+        // الصورة لا تحتاج ضغط
+        setSelectedImage(file);
+      }
+    } catch (error) {
+      console.error("خطأ في ضغط الصورة:", error);
+      toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
+      setSelectedImage(file);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   // Types management

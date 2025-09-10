@@ -5,6 +5,11 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import supabase from "../../../../../../services/supabase";
 import toast from "react-hot-toast";
+import {
+  compressImage,
+  needsCompression,
+  formatFileSize,
+} from "../../../../../../src/lib/image-compression";
 
 type FormData = {
   name_ar: string;
@@ -28,6 +33,7 @@ export default function CreateBranch() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const {
     register,
@@ -45,7 +51,7 @@ export default function CreateBranch() {
     };
   }, [previewImage]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -63,13 +69,60 @@ export default function CreateBranch() {
       return;
     }
 
-    // Cleanup previous preview URL
-    if (previewImage) {
-      URL.revokeObjectURL(previewImage);
-    }
+    try {
+      setIsCompressing(true);
 
-    setSelectedImage(file);
-    setPreviewImage(URL.createObjectURL(file));
+      // فحص ما إذا كانت الصورة تحتاج ضغط
+      if (needsCompression(file, 600)) {
+        toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
+
+        const compressionResult = await compressImage(file, {
+          maxSizeKB: 600,
+          quality: 0.8,
+          maxWidth: 1920,
+          maxHeight: 1080,
+        });
+
+        // عرض معلومات الضغط
+        toast.success(
+          `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
+            compressionResult.originalSize
+          )} → الحجم الجديد: ${formatFileSize(
+            compressionResult.compressedSize
+          )} (تم توفير ${compressionResult.compressionRatio}%)`
+        );
+
+        // Cleanup previous preview URL
+        if (previewImage) {
+          URL.revokeObjectURL(previewImage);
+        }
+
+        setSelectedImage(compressionResult.compressedFile);
+        setPreviewImage(URL.createObjectURL(compressionResult.compressedFile));
+      } else {
+        // الصورة لا تحتاج ضغط
+        // Cleanup previous preview URL
+        if (previewImage) {
+          URL.revokeObjectURL(previewImage);
+        }
+
+        setSelectedImage(file);
+        setPreviewImage(URL.createObjectURL(file));
+      }
+    } catch (error) {
+      console.error("خطأ في ضغط الصورة:", error);
+      toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
+
+      // Cleanup previous preview URL
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+
+      setSelectedImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
