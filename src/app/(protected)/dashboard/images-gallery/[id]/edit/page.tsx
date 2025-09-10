@@ -33,7 +33,6 @@ export default function EditGalleryPage() {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [currentImages, setCurrentImages] = useState<string[]>([]);
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   const {
     register,
@@ -85,7 +84,6 @@ export default function EditGalleryPage() {
 
       if (needsCompressionFiles.length > 0) {
         try {
-          setIsCompressing(true);
           toast(`جاري ضغط ${needsCompressionFiles.length} صورة...`, {
             icon: "ℹ️",
           });
@@ -130,8 +128,6 @@ export default function EditGalleryPage() {
           console.error("خطأ في ضغط الصور:", error);
           toast.error("حدث خطأ أثناء ضغط الصور، سيتم استخدام الصور الأصلية");
           setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
-        } finally {
-          setIsCompressing(false);
         }
       } else {
         // الصور لا تحتاج ضغط
