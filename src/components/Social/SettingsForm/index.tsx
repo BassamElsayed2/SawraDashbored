@@ -9,6 +9,12 @@ import { useRouter } from "next/navigation";
 import supabase from "../../../../services/supabase";
 import { profileSchema } from "./lib/validations/schema";
 import { z } from "zod";
+import {
+  compressImage,
+  needsCompression,
+  formatFileSize,
+} from "../../../../src/lib/image-compression";
+import toast from "react-hot-toast";
 
 const SettingsForm: React.FC = () => {
   const { data: profile } = useAdminProfile();
@@ -24,6 +30,7 @@ const SettingsForm: React.FC = () => {
   });
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // تحديث قيم الفورم عندما تتغير بيانات profile
   useEffect(() => {
@@ -32,11 +39,59 @@ const SettingsForm: React.FC = () => {
     }
   }, [profile, reset]);
 
-  const handleProfilePictureChange = (
+  const handleProfilePictureChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (event.target.files && event.target.files[0]) {
-      setProfilePicture(event.target.files[0]);
+      const file = event.target.files[0];
+
+      // التحقق من نوع الملف
+      if (!file.type.startsWith("image/")) {
+        toast.error(`الملف ${file.name} ليس صورة`);
+        return;
+      }
+
+      // التحقق من حجم الملف (50MB كحد أقصى)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error(`حجم الصورة ${file.name} يجب أن لا يتجاوز 50MB`);
+        return;
+      }
+
+      try {
+        setIsCompressing(true);
+
+        // فحص ما إذا كانت الصورة تحتاج ضغط
+        if (needsCompression(file, 600)) {
+          toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
+
+          const compressionResult = await compressImage(file, {
+            maxSizeKB: 600,
+            quality: 0.8,
+            maxWidth: 1920,
+            maxHeight: 1080,
+          });
+
+          // عرض معلومات الضغط
+          toast.success(
+            `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
+              compressionResult.originalSize
+            )} → الحجم الجديد: ${formatFileSize(
+              compressionResult.compressedSize
+            )} (تم توفير ${compressionResult.compressionRatio}%)`
+          );
+
+          setProfilePicture(compressionResult.compressedFile);
+        } else {
+          // الصورة لا تحتاج ضغط
+          setProfilePicture(file);
+        }
+      } catch (error) {
+        console.error("خطأ في ضغط الصورة:", error);
+        toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
+        setProfilePicture(file);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 

@@ -37,6 +37,11 @@ import { UUID } from "crypto";
 import { getCurrentUser } from "../../../../../../services/apiauth";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  compressImage,
+  needsCompression,
+  formatFileSize,
+} from "../../../../../../src/lib/image-compression";
 
 type ProductFormValues = {
   title_ar: string;
@@ -103,8 +108,11 @@ const CreateProductForm: React.FC = () => {
   // Upload image
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
@@ -120,8 +128,44 @@ const CreateProductForm: React.FC = () => {
         return;
       }
 
-      setSelectedImage(file);
-      setValue("image", file);
+      try {
+        setIsCompressing(true);
+
+        // فحص ما إذا كانت الصورة تحتاج ضغط
+        if (needsCompression(file, 600)) {
+          toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
+
+          const compressionResult = await compressImage(file, {
+            maxSizeKB: 600,
+            quality: 0.8,
+            maxWidth: 1920,
+            maxHeight: 1080,
+          });
+
+          // عرض معلومات الضغط
+          toast.success(
+            `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
+              compressionResult.originalSize
+            )} → الحجم الجديد: ${formatFileSize(
+              compressionResult.compressedSize
+            )} (تم توفير ${compressionResult.compressionRatio}%)`
+          );
+
+          setSelectedImage(compressionResult.compressedFile);
+          setValue("image", compressionResult.compressedFile);
+        } else {
+          // الصورة لا تحتاج ضغط
+          setSelectedImage(file);
+          setValue("image", file);
+        }
+      } catch (error) {
+        console.error("خطأ في ضغط الصورة:", error);
+        toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
+        setSelectedImage(file);
+        setValue("image", file);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -471,7 +515,8 @@ const CreateProductForm: React.FC = () => {
                             <br /> صورة المنتج من هنا
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            حجم الصورة: حتى 50 ميجابايت
+                            حجم الصورة: حتى 50 ميجابايت (سيتم ضغطها تلقائياً إلى
+                            600KB)
                           </p>
                         </div>
 
@@ -753,11 +798,18 @@ const CreateProductForm: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isPending || isUploadingImage}
+              disabled={isPending || isUploadingImage || isCompressing}
               className="font-medium inline-block transition-all rounded-md md:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="inline-block relative ltr:pl-[29px] rtl:pr-[29px]">
-                {isUploadingImage ? (
+                {isCompressing ? (
+                  <>
+                    <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
+                      sync
+                    </i>
+                    جاري ضغط الصورة...
+                  </>
+                ) : isUploadingImage ? (
                   <>
                     <i className="material-symbols-outlined ltr:left-0 rtl:right-0 absolute top-1/2 -translate-y-1/2 animate-spin">
                       sync

@@ -146,6 +146,7 @@ export async function uploadImages(
       .from("news-images")
       .upload(fileName, fileData, {
         contentType: file instanceof File ? file.type : `image/${fileExt}`,
+        cacheControl: "3600", // Cache for 1 hour
       });
 
     if (error) {
