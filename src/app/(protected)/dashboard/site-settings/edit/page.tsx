@@ -54,7 +54,6 @@ const SiteSettings: React.FC = () => {
 
   // Upload Image
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -69,7 +68,6 @@ const SiteSettings: React.FC = () => {
 
       if (needsCompressionFiles.length > 0) {
         try {
-          setIsCompressing(true);
           toast(`جاري ضغط ${needsCompressionFiles.length} صورة...`, {
             icon: "ℹ️",
           });
@@ -114,8 +112,6 @@ const SiteSettings: React.FC = () => {
           console.error("خطأ في ضغط الصور:", error);
           toast.error("حدث خطأ أثناء ضغط الصور، سيتم استخدام الصور الأصلية");
           setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
-        } finally {
-          setIsCompressing(false);
         }
       } else {
         // الصور لا تحتاج ضغط

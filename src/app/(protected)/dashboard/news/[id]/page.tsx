@@ -54,7 +54,6 @@ export default function EditProductPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
   const router = useRouter();
 
   // Types and Sizes management
@@ -149,8 +148,6 @@ export default function EditProductPage() {
     }
 
     try {
-      setIsCompressing(true);
-
       // فحص ما إذا كانت الصورة تحتاج ضغط
       if (needsCompression(file, 600)) {
         toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
@@ -180,8 +177,6 @@ export default function EditProductPage() {
       console.error("خطأ في ضغط الصورة:", error);
       toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
       setSelectedImage(file);
-    } finally {
-      setIsCompressing(false);
     }
   };
 

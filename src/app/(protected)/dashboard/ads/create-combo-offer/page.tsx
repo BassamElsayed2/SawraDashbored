@@ -33,7 +33,6 @@ export default function CreateComboOffer() {
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   const {
     register,
@@ -87,8 +86,6 @@ export default function CreateComboOffer() {
     }
 
     try {
-      setIsCompressing(true);
-
       // فحص ما إذا كانت الصورة تحتاج ضغط
       if (needsCompression(file, 600)) {
         toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
@@ -137,8 +134,6 @@ export default function CreateComboOffer() {
 
       setSelectedImage(file);
       setPreviewImage(URL.createObjectURL(file));
-    } finally {
-      setIsCompressing(false);
     }
   };
 

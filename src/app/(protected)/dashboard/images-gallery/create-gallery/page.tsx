@@ -20,7 +20,6 @@ type GalleryFormData = z.infer<typeof gallerySchema>;
 export default function CreatGalleryPage() {
   const router = useRouter();
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   const {
     register,
@@ -78,7 +77,6 @@ export default function CreatGalleryPage() {
 
       if (needsCompressionFiles.length > 0) {
         try {
-          setIsCompressing(true);
           toast(`جاري ضغط ${needsCompressionFiles.length} صورة...`, {
             icon: "ℹ️",
           });
@@ -123,8 +121,6 @@ export default function CreatGalleryPage() {
           console.error("خطأ في ضغط الصور:", error);
           toast.error("حدث خطأ أثناء ضغط الصور، سيتم استخدام الصور الأصلية");
           setSelectedImages((prevImages) => [...prevImages, ...filesArray]);
-        } finally {
-          setIsCompressing(false);
         }
       } else {
         // الصور لا تحتاج ضغط

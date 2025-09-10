@@ -30,7 +30,6 @@ const SettingsForm: React.FC = () => {
   });
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   // تحديث قيم الفورم عندما تتغير بيانات profile
   useEffect(() => {
@@ -58,8 +57,6 @@ const SettingsForm: React.FC = () => {
       }
 
       try {
-        setIsCompressing(true);
-
         // فحص ما إذا كانت الصورة تحتاج ضغط
         if (needsCompression(file, 600)) {
           toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
@@ -89,8 +86,6 @@ const SettingsForm: React.FC = () => {
         console.error("خطأ في ضغط الصورة:", error);
         toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
         setProfilePicture(file);
-      } finally {
-        setIsCompressing(false);
       }
     }
   };
