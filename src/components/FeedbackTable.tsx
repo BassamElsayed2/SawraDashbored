@@ -110,11 +110,11 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
   });
 
   return (
-    <div className="overflow-x-auto">
+    <div className="table-responsive overflow-x-auto">
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
-            <th className="text-right py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+        <thead className="text-black dark:text-white">
+          <tr>
+            <th className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 bg-primary-50 dark:bg-[#15203c] whitespace-nowrap">
               <button
                 onClick={() => handleSort("customer_name")}
                 className="flex items-center gap-1 hover:text-orange-500 transition-colors"
@@ -129,7 +129,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                 )}
               </button>
             </th>
-            <th className="text-right py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+            <th className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 bg-primary-50 dark:bg-[#15203c] whitespace-nowrap">
               <button
                 onClick={() => handleSort("branch_id")}
                 className="flex items-center gap-1 hover:text-orange-500 transition-colors"
@@ -144,7 +144,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                 )}
               </button>
             </th>
-            <th className="text-right py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+            <th className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 bg-primary-50 dark:bg-[#15203c] whitespace-nowrap">
               <button
                 onClick={() => handleSort("overall_rating")}
                 className="flex items-center gap-1 hover:text-orange-500 transition-colors"
@@ -159,7 +159,7 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                 )}
               </button>
             </th>
-            <th className="text-right py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+            <th className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 bg-primary-50 dark:bg-[#15203c] whitespace-nowrap">
               <button
                 onClick={() => handleSort("created_at")}
                 className="flex items-center gap-1 hover:text-orange-500 transition-colors"
@@ -174,19 +174,19 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                 )}
               </button>
             </th>
-            <th className="text-right py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+            <th className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 bg-primary-50 dark:bg-[#15203c] whitespace-nowrap">
               الإجراءات
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-black dark:text-white">
           {sortedFeedback.map((item) => (
             <tr
               key={item.id}
-              className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               onClick={() => onFeedbackSelect(item)}
             >
-              <td className="py-3 px-4">
+              <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 border-b border-gray-100 dark:border-[#172036]">
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
                     {item.customer_name}
@@ -196,12 +196,12 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="py-3 px-4">
+              <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 border-b border-gray-100 dark:border-[#172036]">
                 <div className="text-gray-900 dark:text-white">
                   {item.branch?.name_ar || item.branch?.name_en || "غير محدد"}
                 </div>
               </td>
-              <td className="py-3 px-4">
+              <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 border-b border-gray-100 dark:border-[#172036]">
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRatingColor(
                     item.overall_rating
@@ -210,10 +210,12 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
                   {item.overall_rating} ⭐ {getRatingLabel(item.overall_rating)}
                 </span>
               </td>
-              <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
-                {new Date(item.created_at || "").toLocaleDateString("ar-EG")}
+              <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 border-b border-gray-100 dark:border-[#172036]">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {new Date(item.created_at || "").toLocaleDateString("ar-EG")}
+                </span>
               </td>
-              <td className="py-3 px-4">
+              <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] md:ltr:first:pl-[25px] md:rtl:first:pr-[25px] ltr:first:pr-0 rtl:first:pl-0 border-b border-gray-100 dark:border-[#172036]">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={(e) => {
@@ -248,24 +250,62 @@ export const FeedbackTable: React.FC<FeedbackTableProps> = ({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center justify-between mt-6 px-[20px] py-[15px] md:px-[25px]">
           <div className="text-sm text-gray-700 dark:text-gray-300" dir="rtl">
             عرض {(currentPage - 1) * pageSize + 1} إلى{" "}
             {Math.min(currentPage * pageSize, total)} من {total} تقييم
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onPageChange(currentPage - 1)}
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               السابق
             </button>
-            <span className="px-3 py-1 text-sm text-gray-700 dark:text-gray-300">
-              {currentPage} من {totalPages}
-            </span>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {(() => {
+                const pages = [];
+                const maxVisible = 5;
+                let startPage = Math.max(
+                  1,
+                  currentPage - Math.floor(maxVisible / 2)
+                );
+                const endPage = Math.min(
+                  totalPages,
+                  startPage + maxVisible - 1
+                );
+
+                // Adjust start page if we're near the end
+                if (endPage - startPage + 1 < maxVisible) {
+                  startPage = Math.max(1, endPage - maxVisible + 1);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      onClick={() => onPageChange(i)}
+                      className={`px-3 py-1 text-sm border rounded-md transition-colors ${
+                        currentPage === i
+                          ? "bg-primary-500 text-white border-primary-500"
+                          : "border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+                return pages;
+              })()}
+            </div>
+
             <button
-              onClick={() => onPageChange(currentPage + 1)}
+              onClick={() =>
+                onPageChange(Math.min(totalPages, currentPage + 1))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
