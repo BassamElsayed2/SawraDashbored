@@ -28,7 +28,16 @@ export const FeedbackDashboard: React.FC = () => {
     error: feedbackError,
     refetch: refetchFeedback,
   } = useQuery({
-    queryKey: ["feedback", filters],
+    queryKey: [
+      "feedback",
+      filters.page,
+      filters.limit,
+      filters.branchId,
+      filters.rating,
+      filters.startDate,
+      filters.endDate,
+      filters.search,
+    ],
     queryFn: () => apiCustomerFeedback.getFeedback(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -59,21 +68,25 @@ export const FeedbackDashboard: React.FC = () => {
   });
 
   // Handle filter changes
-  const handleFilterChange = (newFilters: Partial<FeedbackFilters>) => {
-    setFilters((prev) => ({
-      ...prev,
-      ...newFilters,
-      page: 1, // Reset to first page when filters change
-    }));
-  };
+  const handleFilterChange = React.useCallback(
+    (newFilters: Partial<FeedbackFilters>) => {
+      setFilters((prev) => ({
+        ...prev,
+        ...newFilters,
+        page: 1, // Reset to first page when filters change
+      }));
+    },
+    []
+  );
 
   // Handle page change
-  const handlePageChange = (page: number) => {
+  const handlePageChange = React.useCallback((page: number) => {
+    if (page < 1) return;
     setFilters((prev) => ({
       ...prev,
       page,
     }));
-  };
+  }, []);
 
   // Check if feature is enabled
   if (!isFeatureEnabled("ENABLE_FEEDBACK_DASHBOARD")) {

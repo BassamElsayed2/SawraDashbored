@@ -36,20 +36,19 @@ export const FeedbackFiltersComponent: React.FC<
 
   const watchedValues = watch();
 
-  // Apply filters on form change
+  // Apply filters on form change (only for search to avoid page resets)
   React.useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      onFilterChange({
-        branchId: watchedValues.branchId || undefined,
-        rating: watchedValues.rating || undefined,
-        startDate: watchedValues.startDate || undefined,
-        endDate: watchedValues.endDate || undefined,
-        search: watchedValues.search || undefined,
-      });
+      // Only apply search filter automatically to avoid page resets
+      if (watchedValues.search !== filters.search) {
+        onFilterChange({
+          search: watchedValues.search || undefined,
+        });
+      }
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [watchedValues, onFilterChange]);
+  }, [watchedValues.search, filters.search, onFilterChange]);
 
   const handleReset = () => {
     reset();
@@ -160,6 +159,12 @@ export const FeedbackFiltersComponent: React.FC<
             render={({ field }) => (
               <select
                 {...field}
+                onChange={(e) => {
+                  field.onChange(e);
+                  onFilterChange({
+                    branchId: e.target.value || undefined,
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                 dir="rtl"
               >
@@ -188,6 +193,14 @@ export const FeedbackFiltersComponent: React.FC<
             render={({ field }) => (
               <select
                 {...field}
+                onChange={(e) => {
+                  field.onChange(e);
+                  onFilterChange({
+                    rating: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                 dir="rtl"
               >
@@ -237,6 +250,12 @@ export const FeedbackFiltersComponent: React.FC<
                   <input
                     {...field}
                     type="date"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      onFilterChange({
+                        startDate: e.target.value || undefined,
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                   />
                 )}
@@ -258,6 +277,12 @@ export const FeedbackFiltersComponent: React.FC<
                   <input
                     {...field}
                     type="date"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      onFilterChange({
+                        endDate: e.target.value || undefined,
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                   />
                 )}
