@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 
@@ -12,6 +12,23 @@ const ChangePasswordForm: React.FC = () => {
   const [message, setMessage] = useState("");
 
   const router = useRouter();
+
+  // تحليل قوة كلمة المرور
+  const passwordStrength = useMemo(() => {
+    const checks = {
+      length: newPassword.length >= 8,
+      lowercase: /[a-z]/.test(newPassword),
+      uppercase: /[A-Z]/.test(newPassword),
+      number: /[0-9]/.test(newPassword),
+      special: /[^a-zA-Z0-9]/.test(newPassword),
+    };
+
+    const passedChecks = Object.values(checks).filter(Boolean).length;
+    const strength =
+      passedChecks === 5 ? "strong" : passedChecks >= 3 ? "medium" : "weak";
+
+    return { checks, strength, passedChecks };
+  }, [newPassword]);
 
   const handleChangePassword = async () => {
     setMessage("");
@@ -25,6 +42,39 @@ const ChangePasswordForm: React.FC = () => {
 
     if (newPassword !== confirmPassword) {
       setMessage("كلمة السر الجديدة غير متطابقة.");
+      setLoading(false);
+      return;
+    }
+
+    // التحقق من قوة كلمة المرور
+    if (newPassword.length < 8) {
+      setMessage("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setMessage("كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      setMessage("كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setMessage("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[^a-zA-Z0-9]/.test(newPassword)) {
+      setMessage(
+        "كلمة المرور يجب أن تحتوي على حرف خاص واحد على الأقل (!@#$%^&*)."
+      );
       setLoading(false);
       return;
     }
@@ -106,6 +156,70 @@ const ChangePasswordForm: React.FC = () => {
               id="password2"
               placeholder="Type password"
             />
+
+            {/* مؤشر قوة كلمة المرور */}
+            {newPassword && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1 flex-1 rounded-full transition-all ${
+                        level <= passwordStrength.passedChecks
+                          ? passwordStrength.strength === "strong"
+                            ? "bg-green-500"
+                            : passwordStrength.strength === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                          : "bg-gray-200 dark:bg-gray-700"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="space-y-1">
+                  {[
+                    { key: "length", label: "8 أحرف على الأقل" },
+                    { key: "uppercase", label: "حرف كبير (A-Z)" },
+                    { key: "lowercase", label: "حرف صغير (a-z)" },
+                    { key: "number", label: "رقم (0-9)" },
+                    { key: "special", label: "حرف خاص (!@#$%^&*)" },
+                  ].map((requirement) => (
+                    <div
+                      key={requirement.key}
+                      className="flex items-center gap-2 text-xs"
+                    >
+                      <span
+                        className={`${
+                          passwordStrength.checks[
+                            requirement.key as keyof typeof passwordStrength.checks
+                          ]
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        {passwordStrength.checks[
+                          requirement.key as keyof typeof passwordStrength.checks
+                        ]
+                          ? "✓"
+                          : "○"}
+                      </span>
+                      <span
+                        className={`${
+                          passwordStrength.checks[
+                            requirement.key as keyof typeof passwordStrength.checks
+                          ]
+                            ? "text-green-700 dark:text-green-300"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        {requirement.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div

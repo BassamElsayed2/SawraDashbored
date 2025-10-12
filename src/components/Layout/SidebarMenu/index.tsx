@@ -337,6 +337,44 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
               </div>
             </div>
 
+            <div className="accordion-item rounded-md text-black dark:text-white mb-[5px] whitespace-nowrap">
+              <button
+                className={`accordion-button toggle flex items-center transition-all py-[9px] ltr:pl-[14px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] rounded-md font-medium w-full relative hover:bg-gray-50 text-left dark:hover:bg-[#15203c] ${
+                  openIndex === 5 ? "open" : ""
+                }`}
+                type="button"
+                onClick={() => toggleAccordion(5)}
+              >
+                <span className="material-symbols-outlined transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px">
+                  shopping_cart
+                </span>
+
+                <span className="title leading-none">الطلبات</span>
+              </button>
+
+              <div className="pt-[4px]">
+                <ul className="sidebar-sub-menu">
+                  <div
+                    className={`accordion-collapse ${
+                      openIndex === 5 ? "open" : "hidden"
+                    }`}
+                  >
+                    <li className="sidemenu-item mb-[4px] last:mb-0">
+                      <Link
+                        href="/dashboard/orders/"
+                        className={`sidemenu-link rounded-md flex items-center relative transition-all font-medium text-gray-500 dark:text-gray-400 py-[9px] ltr:pl-[38px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] hover:text-primary-500 hover:bg-primary-50 w-full text-left dark:hover:bg-[#15203c] ${
+                          pathname === "/dashboard/orders/" ? "active" : ""
+                        }`}
+                      >
+                        <i className="ri-list-check transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px"></i>
+                        قائمة الطلبات
+                      </Link>
+                    </li>
+                  </div>
+                </ul>
+              </div>
+            </div>
+
             <span className="block relative font-medium uppercase text-gray-400 mb-[8px] text-xs [&:not(:first-child)]:mt-[22px]">
               أخري
             </span>
