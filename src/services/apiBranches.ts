@@ -1,5 +1,5 @@
 import supabase from "./supabase";
-import { Branch } from "../src/types/feedback";
+import { Branch } from "@/types/feedback";
 
 // Basic branch management service
 export const apiBranches = {
@@ -129,3 +129,11 @@ export const apiBranches = {
     }
   },
 };
+
+// Export individual functions for convenience
+export const getBranches = apiBranches.getBranches;
+export const getBranch = apiBranches.getBranch;
+export const getPublicBranch = apiBranches.getPublicBranch;
+export const createBranch = apiBranches.createBranch;
+export const updateBranch = apiBranches.updateBranch;
+export const deleteBranch = apiBranches.deleteBranch;

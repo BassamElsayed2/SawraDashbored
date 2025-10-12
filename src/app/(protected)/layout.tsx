@@ -20,6 +20,18 @@ export default async function ProtectedLayout({
     redirect("/");
   }
 
+  // ✅ التحقق من وجود المستخدم في admin_profiles
+  const { data: adminProfile, error } = await supabase
+    .from("admin_profiles")
+    .select("user_id")
+    .eq("user_id", session.user.id)
+    .single();
+
+  // ❌ إذا المستخدم غير موجود في admin_profiles، منعه من الدخول
+  if (error || !adminProfile) {
+    redirect("/?error=unauthorized");
+  }
+
   return (
     <LayoutProvider>
       {children}
