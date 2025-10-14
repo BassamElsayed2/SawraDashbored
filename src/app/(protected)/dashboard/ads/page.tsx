@@ -12,7 +12,7 @@ import {
   deleteOffer,
   uploadOfferImage,
   type ComboOffer,
-} from "../../../../../services/apiComboOffers";
+} from "@/services/apiComboOffers";
 
 type FormData = {
   title_ar: string;

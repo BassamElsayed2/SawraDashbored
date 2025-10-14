@@ -4,11 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  deleteProduct,
-  getProducts,
-} from "../../../../../services/apiProducts";
-import { getCategories } from "../../../../../services/apiCategories";
+import { deleteProduct, getProducts } from "@/services/apiProducts";
+import { getCategories } from "@/services/apiCategories";
 import toast from "react-hot-toast";
 
 const ProductListTable: React.FC = () => {

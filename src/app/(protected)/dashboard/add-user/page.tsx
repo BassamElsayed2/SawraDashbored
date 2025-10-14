@@ -9,7 +9,7 @@ import { signUpSchema } from "@/components/Social/SettingsForm/lib/validations/s
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import * as apiAuth from "../../../../../services/apiAuth";
+import * as apiAuth from "@/services/apiAuth";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 type SignUpData = z.infer<typeof signUpSchema>;
@@ -183,7 +183,7 @@ export default function SignUpForm() {
       }
 
       // إنشاء المستخدم - دور admin افتراضي
-      const response = await apiAuth.createAdminUser({
+      const response = (await apiAuth.createAdminUser({
         email: data.email,
         password: data.password,
         full_name: data.full_name || "",
@@ -193,7 +193,7 @@ export default function SignUpForm() {
         address: data.address || "",
         about: data.about || "",
         image_url: imageUrl,
-      });
+      })) as { success: boolean; message?: string };
 
       if (response.success) {
         toast.success("تم إنشاء حساب المدير بنجاح");

@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import {
-  createOffer,
-  uploadOfferImage,
-} from "../../../../../../services/apiComboOffers";
+import { createOffer, uploadOfferImage } from "@/services/apiComboOffers";
 import toast from "react-hot-toast";
 import {
   compressImage,

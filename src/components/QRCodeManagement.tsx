@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import apiBranchQR from "../../services/apiBranchQR";
-import { apiBranches } from "../../services/apiBranches";
+import apiBranchQR from "@/services/apiBranchQR";
+import { apiBranches } from "@/services/apiBranches";
 import { Branch, BranchQRCode } from "../types/feedback";
 import { QRCodeOptions } from "../lib/qr-code-generator";
 import { isFeatureEnabled } from "../lib/feature-flags";

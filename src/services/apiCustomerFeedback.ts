@@ -107,14 +107,21 @@ export async function getFeedback(filters?: {
     // Transform branch data from flat columns to nested object
     const transformedData = {
       ...response.data,
-      feedback: response.data.feedback.map((item: any) => ({
-        ...item,
-        branch: {
-          id: item.branch_id,
-          name_ar: item.branch_name_ar,
-          name_en: item.branch_name_en,
-        },
-      })),
+      feedback: response.data.feedback.map(
+        (
+          item: CustomerFeedback & {
+            branch_name_ar?: string;
+            branch_name_en?: string;
+          }
+        ) => ({
+          ...item,
+          branch: {
+            id: item.branch_id,
+            name_ar: item.branch_name_ar,
+            name_en: item.branch_name_en,
+          },
+        })
+      ),
     };
 
     return transformedData;
@@ -176,9 +183,14 @@ export async function deleteFeedback(id: string): Promise<void> {
 }
 
 // Submit feedback from customer (public endpoint - no auth required)
-export async function submitFeedback(feedback: any): Promise<any> {
+export async function submitFeedback(
+  feedback: Partial<CustomerFeedback>
+): Promise<unknown> {
   try {
-    const response = await apiClient.post<any>("/feedback/submit", feedback);
+    const response = await apiClient.post<unknown>(
+      "/feedback/submit",
+      feedback
+    );
     return response.data;
   } catch (error) {
     console.error("Error submitting feedback:", error);

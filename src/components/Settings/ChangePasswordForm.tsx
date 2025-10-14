@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import * as apiAuth from "../../../services/apiAuth";
+import * as apiAuth from "@/services/apiAuth";
 import toast from "react-hot-toast";
 
 const ChangePasswordForm: React.FC = () => {
@@ -82,10 +82,10 @@ const ChangePasswordForm: React.FC = () => {
 
     try {
       // Call backend API to change password
-      const response = await apiAuth.changePassword(
+      const response = (await apiAuth.changePassword(
         currentPassword,
         newPassword
-      );
+      )) as { success: boolean; message?: string };
 
       if (response.success) {
         toast.success("تم تحديث كلمة السر بنجاح. سيتم تسجيل خروجك.");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { signIn } from "../../../services/apiAuth";
+import { signIn } from "@/services/apiAuth";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 

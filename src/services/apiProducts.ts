@@ -125,14 +125,16 @@ export async function uploadProductImage(
   folder = "products"
 ): Promise<string> {
   try {
-    const response = await apiClient.uploadFile("/upload/image", file, {
+    const response = (await apiClient.uploadFile("/upload/image", file, {
       folder,
-    });
+    })) as { data: { url?: string; imageUrl?: string } };
 
     // Return the image URL from the response
-    return response.data.url || response.data.imageUrl;
-  } catch (error: any) {
-    console.error("خطأ أثناء رفع صورة المنتج:", error.message);
+    return response.data.url || response.data.imageUrl || "";
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("خطأ أثناء رفع صورة المنتج:", errorMessage);
     throw new Error("تعذر رفع صورة المنتج");
   }
 }
@@ -142,13 +144,15 @@ export async function deleteProductImage(imageUrl: string): Promise<void> {
     // Extract file path from URL if needed
     const path = new URL(imageUrl).pathname;
     await apiClient.deleteFile("/upload/image", path);
-  } catch (error: any) {
-    console.error("فشل حذف صورة المنتج:", error.message);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("فشل حذف صورة المنتج:", errorMessage);
     throw error;
   }
 }
 
-export default {
+const apiProducts = {
   getProducts,
   getProductById,
   createProduct,
@@ -157,3 +161,5 @@ export default {
   uploadProductImage,
   deleteProductImage,
 };
+
+export default apiProducts;

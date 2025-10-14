@@ -1,5 +1,5 @@
 // Orders API Service - Uses Express Backend
-import apiClient from "../../services/api-client";
+import apiClient from "./api-client";
 
 export interface OrderItem {
   id?: string;

@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { useQuery } from "@tanstack/react-query";
 
-import { getProducts } from "../../../../services/apiProducts";
-import { getOffers } from "../../../../services/apiComboOffers";
+import { getProducts } from "@/services/apiProducts";
+import { getOffers } from "@/services/apiComboOffers";
 
 const Welcome: React.FC = () => {
   const { data: profile } = useAdminProfile();

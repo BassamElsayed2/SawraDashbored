@@ -4,10 +4,10 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface FetchOptions extends RequestInit {
-  data?: any;
+  data?: unknown;
 }
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data: T;
   message?: string;
@@ -52,7 +52,10 @@ class ApiClient {
 
           // Create a detailed error message with all validation errors
           const errorDetails = responseData.errors
-            .map((err: any) => `${err.field}: ${err.message}`)
+            .map(
+              (err: { field: string; message: string }) =>
+                `${err.field}: ${err.message}`
+            )
             .join(", ");
 
           throw new Error(
@@ -66,7 +69,7 @@ class ApiClient {
       }
 
       return responseData;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`API Error (${endpoint}):`, error);
       throw error;
     }
@@ -80,7 +83,7 @@ class ApiClient {
   // POST request
   post<T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: FetchOptions
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: "POST", data });
@@ -89,7 +92,7 @@ class ApiClient {
   // PUT request
   put<T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: FetchOptions
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: "PUT", data });
@@ -98,7 +101,7 @@ class ApiClient {
   // PATCH request
   patch<T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: FetchOptions
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: "PATCH", data });
@@ -113,14 +116,19 @@ class ApiClient {
   async uploadFile(
     endpoint: string,
     file: File,
-    additionalData?: Record<string, any>
-  ): Promise<any> {
+    additionalData?: Record<string, unknown>
+  ): Promise<unknown> {
     const formData = new FormData();
     formData.append("image", file);
 
     if (additionalData) {
       Object.keys(additionalData).forEach((key) => {
-        formData.append(key, additionalData[key]);
+        const value = additionalData[key];
+        if (typeof value === "string" || value instanceof Blob) {
+          formData.append(key, value);
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
       });
     }
 
@@ -138,14 +146,14 @@ class ApiClient {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Upload Error (${endpoint}):`, error);
       throw error;
     }
   }
 
   // Delete file
-  async deleteFile(endpoint: string, filePath: string): Promise<any> {
+  async deleteFile(endpoint: string, filePath: string): Promise<unknown> {
     return this.delete(endpoint, {
       data: { filePath },
     });

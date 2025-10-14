@@ -1,7 +1,7 @@
 // hooks/useAdminProfile.ts
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@/components/Authentication/useUser";
-import apiClient from "../../../services/api-client";
+import apiClient from "@/services/api-client";
 
 interface AdminProfile {
   id: string;

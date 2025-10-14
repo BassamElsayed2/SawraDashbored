@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
 
-import { getProducts } from "../../services/apiProducts";
+import { getProducts } from "@/services/apiProducts";
 
 const RecentProperty: React.FC = () => {
   const { data: products } = useQuery({

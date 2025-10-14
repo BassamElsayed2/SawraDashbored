@@ -10,7 +10,7 @@ import {
   generateQRCode,
   getQRCode,
   BranchQRCode,
-} from "../../../../../services/apiBranchQR";
+} from "@/services/apiBranchQR";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import dynamic from "next/dynamic";
@@ -243,9 +243,7 @@ const BranchesList: React.FC = () => {
       if (selectedImage) {
         try {
           toast("جاري رفع الصورة...", { icon: "📤" });
-          const { uploadBranchImage } = await import(
-            "../../../../../services/apiUpload"
-          );
+          const { uploadBranchImage } = await import("@/services/apiUpload");
           const uploadResponse = await uploadBranchImage(selectedImage);
           imageUrl = uploadResponse.imageUrl;
           toast.success("تم رفع الصورة بنجاح");

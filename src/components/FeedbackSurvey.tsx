@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { apiCustomerFeedback } from "../../services/apiCustomerFeedback";
-import { apiBranches } from "../../services/apiBranches";
+import { apiCustomerFeedback } from "@/services/apiCustomerFeedback";
+import { apiBranches } from "@/services/apiBranches";
 import {
   FeedbackSubmission,
   surveyCategories,

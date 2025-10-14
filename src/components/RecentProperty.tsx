@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
 
-import { getOffers } from "../../services/apiComboOffers";
+import { getOffers } from "@/services/apiComboOffers";
 
 const RecentProperty: React.FC = () => {
   const { data: comboOffers } = useQuery({

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import apiClient from "../../../../services/api-client";
+import apiClient from "@/services/api-client";
 import { profileSchema } from "./lib/validations/schema";
 import { z } from "zod";
 import {
@@ -99,10 +99,10 @@ const SettingsForm: React.FC = () => {
 
   const uploadImage = async (file: File) => {
     try {
-      const response = await apiClient.uploadFile("/upload/image", file, {
+      const response = (await apiClient.uploadFile("/upload/image", file, {
         folder: "profile-pictures",
-      });
-      return response.data.url || response.data.imageUrl;
+      })) as { data: { url?: string; imageUrl?: string } };
+      return response.data.url || response.data.imageUrl || "";
     } catch (error) {
       console.error("Error uploading image:", error);
       throw new Error("فشل رفع الصورة");

@@ -127,7 +127,7 @@ export async function deleteQRCode(branchId: string): Promise<void> {
   await apiClient.delete(`/qrcode/${branchId}`);
 }
 
-export default {
+const apiBranchQR = {
   getBranches,
   getBranchById,
   getPublicBranch,
@@ -139,3 +139,5 @@ export default {
   getAllQRCodes,
   deleteQRCode,
 };
+
+export default apiBranchQR;

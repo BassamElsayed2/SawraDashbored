@@ -31,7 +31,9 @@ export async function updateAboutUs(
   return response.data.content;
 }
 
-export default {
+const apiAboutUs = {
   getAboutUs,
   updateAboutUs,
 };
+
+export default apiAboutUs;

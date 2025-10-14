@@ -3,8 +3,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { createBranch } from "../../../../../../services/apiBranchQR";
-import { uploadBranchImage } from "../../../../../../services/apiUpload";
+import { createBranch } from "@/services/apiBranchQR";
+import { uploadBranchImage } from "@/services/apiUpload";
 import toast from "react-hot-toast";
 import {
   compressImage,

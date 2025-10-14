@@ -73,17 +73,19 @@ export async function uploadCategoryImage(
   folder = "categories"
 ): Promise<string> {
   try {
-    const response = await apiClient.uploadFile("/upload/image", file, {
+    const response = (await apiClient.uploadFile("/upload/image", file, {
       folder,
-    });
-    return response.data.url || response.data.imageUrl;
-  } catch (error: any) {
-    console.error("خطأ أثناء رفع صورة الفئة:", error.message);
+    })) as { data: { url?: string; imageUrl?: string } };
+    return response.data.url || response.data.imageUrl || "";
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("خطأ أثناء رفع صورة الفئة:", errorMessage);
     throw new Error("تعذر رفع صورة الفئة");
   }
 }
 
-export default {
+const apiCategories = {
   getCategories,
   getCategoryById,
   createCategory,
@@ -91,3 +93,5 @@ export default {
   deleteCategory,
   uploadCategoryImage,
 };
+
+export default apiCategories;

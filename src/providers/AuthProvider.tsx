@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import * as apiAuth from "../../services/apiAuth";
-import type { User } from "../../services/apiAuth";
+import * as apiAuth from "@/services/apiAuth";
+import type { User } from "@/services/apiAuth";
 import toast from "react-hot-toast";
 
 interface AuthContextType {
