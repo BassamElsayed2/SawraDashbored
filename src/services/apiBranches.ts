@@ -1,4 +1,5 @@
-// Branches API Service - Wrapper for backward compatibility
-// Re-exports from the main services directory
-export * from "../../services/apiBranchQR";
-export { default as apiBranches } from "../../services/apiBranches";
+// Branches API Service - Re-exports from the main service file
+export * from "./apiBranchQR";
+export { default } from "./apiBranchQR";
+import apiBranchQR from "./apiBranchQR";
+export const apiBranches = apiBranchQR;

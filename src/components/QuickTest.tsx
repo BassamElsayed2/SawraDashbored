@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { apiCustomerFeedback } from "../../services/apiCustomerFeedback";
+import { apiCustomerFeedback } from "@/services/apiCustomerFeedback";
 import { FeedbackSubmission } from "../types/feedback";
 
 const QuickTest: React.FC = () => {
@@ -27,7 +27,9 @@ const QuickTest: React.FC = () => {
         opinion: "خدمة ممتازة، الطعام لذيذ والنظافة ممتازة. شكراً لكم!",
       };
 
-      const feedback = await apiCustomerFeedback.submitFeedback(testFeedback);
+      const feedback = (await apiCustomerFeedback.submitFeedback(
+        testFeedback
+      )) as { id: string };
       setResult(`✅ تم إرسال التقييم بنجاح! ID: ${feedback.id}`);
     } catch (error) {
       setResult(
@@ -45,7 +47,7 @@ const QuickTest: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         اختبار سريع لنظام التقييم
       </h1>
-      
+
       <div className="space-y-4">
         <button
           onClick={testFeedbackSubmission}
@@ -56,15 +58,21 @@ const QuickTest: React.FC = () => {
         </button>
 
         {result && (
-          <div className={`p-4 rounded-lg ${
-            result.includes("✅") ? "bg-green-100 border border-green-400 text-green-700" : "bg-red-100 border border-red-400 text-red-700"
-          }`}>
+          <div
+            className={`p-4 rounded-lg ${
+              result.includes("✅")
+                ? "bg-green-100 border border-green-400 text-green-700"
+                : "bg-red-100 border border-red-400 text-red-700"
+            }`}
+          >
             <p className="font-medium">{result}</p>
           </div>
         )}
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">معلومات الاختبار:</h3>
+          <h3 className="font-semibold text-yellow-800 mb-2">
+            معلومات الاختبار:
+          </h3>
           <ul className="text-sm text-yellow-700 space-y-1">
             <li>• يختبر إرسال تقييم كامل مع جميع البيانات</li>
             <li>• يستخدم أسماء الأعمدة الصحيحة من قاعدة البيانات</li>

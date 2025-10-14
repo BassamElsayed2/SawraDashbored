@@ -47,10 +47,12 @@ export async function deleteProperty(key: string): Promise<void> {
   await apiClient.delete(`/settings/${key}`);
 }
 
-export default {
+const apiProperty = {
   getProperties,
   getPropertyByKey,
   updateProperty,
   createProperty,
   deleteProperty,
 };
+
+export default apiProperty;

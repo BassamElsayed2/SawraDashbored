@@ -58,7 +58,7 @@ export async function getCurrentUser(): Promise<{
 }> {
   try {
     return await apiClient.get<{ user: User | null }>("/auth/me");
-  } catch (error) {
+  } catch {
     return { success: false, data: { user: null } };
   }
 }
@@ -70,7 +70,7 @@ export async function checkAuth(): Promise<User | null> {
   try {
     const response = await getCurrentUser();
     return response.data.user;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -84,7 +84,7 @@ export async function verifyAdminRole(): Promise<boolean> {
     if (!user) return false;
     const adminRoles = ["admin", "super_admin", "manager"];
     return adminRoles.includes(user.role || "");
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -95,7 +95,7 @@ export async function verifyAdminRole(): Promise<boolean> {
 export async function changePassword(
   oldPassword: string,
   newPassword: string
-): Promise<any> {
+): Promise<unknown> {
   return apiClient.put("/auth/change-password", {
     old_password: oldPassword,
     new_password: newPassword,
@@ -108,7 +108,7 @@ export async function changePassword(
 export async function updateProfile(data: {
   full_name?: string;
   phone?: string;
-}): Promise<any> {
+}): Promise<unknown> {
   return apiClient.put("/auth/profile", data);
 }
 
@@ -126,7 +126,7 @@ export async function createAdminUser(data: {
   address?: string;
   about?: string;
   image_url?: string;
-}): Promise<any> {
+}): Promise<unknown> {
   return apiClient.post("/temp-admin/create", data);
 }
 
@@ -134,7 +134,7 @@ export async function createAdminUser(data: {
 // Default Export
 // ============================================================
 
-export default {
+const apiAuth = {
   signIn,
   signOut,
   getCurrentUser,
@@ -144,3 +144,5 @@ export default {
   updateProfile,
   createAdminUser,
 };
+
+export default apiAuth;

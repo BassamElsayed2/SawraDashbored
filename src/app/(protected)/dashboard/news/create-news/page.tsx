@@ -29,12 +29,12 @@ import {
   ProductWithTypes,
   ProductType,
   ProductSize,
-} from "../../../../../../services/apiProducts";
+} from "@/services/apiProducts";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { UUID } from "crypto";
 
-import { checkAuth } from "../../../../../../services/apiAuth";
+import { checkAuth } from "@/services/apiAuth";
 import Image from "next/image";
 import Link from "next/link";
 import {

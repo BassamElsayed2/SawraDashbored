@@ -68,13 +68,13 @@ export async function deleteOffer(id: string): Promise<void> {
 }
 
 export async function uploadOfferImage(file: File): Promise<string> {
-  const response = await apiClient.uploadFile("/upload/image", file, {
+  const response = (await apiClient.uploadFile("/upload/image", file, {
     folder: "offers",
-  });
-  return response.data.url || response.data.imageUrl;
+  })) as { data: { url?: string; imageUrl?: string } };
+  return response.data.url || response.data.imageUrl || "";
 }
 
-export default {
+const apiComboOffers = {
   getOffers,
   getOfferById,
   createOffer,
@@ -82,3 +82,5 @@ export default {
   deleteOffer,
   uploadOfferImage,
 };
+
+export default apiComboOffers;

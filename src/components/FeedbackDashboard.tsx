@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiCustomerFeedback } from "../../services/apiCustomerFeedback";
-import { apiBranches } from "../../services/apiBranches";
+import { apiCustomerFeedback } from "@/services/apiCustomerFeedback";
+import { apiBranches } from "@/services/apiBranches";
 import { FeedbackFilters, FeedbackWithRatings } from "../types/feedback";
 import { FeedbackTable } from "./FeedbackTable";
 import { FeedbackFiltersComponent as FiltersComponent } from "./FeedbackFilters";

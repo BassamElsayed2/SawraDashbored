@@ -29,7 +29,7 @@ import {
   ProductWithTypes,
   ProductType,
   ProductSize,
-} from "../../../../../../services/apiProducts";
+} from "@/services/apiProducts";
 import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Image from "next/image";

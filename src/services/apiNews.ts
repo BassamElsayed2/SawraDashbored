@@ -65,13 +65,13 @@ export async function deleteNews(id: string): Promise<void> {
 }
 
 export async function uploadNewsImage(file: File): Promise<string> {
-  const response = await apiClient.uploadFile("/upload/image", file, {
+  const response = (await apiClient.uploadFile("/upload/image", file, {
     folder: "news",
-  });
-  return response.data.url || response.data.imageUrl;
+  })) as { data: { url?: string; imageUrl?: string } };
+  return response.data.url || response.data.imageUrl || "";
 }
 
-export default {
+const apiNews = {
   getNews,
   getNewsById,
   createNews,
@@ -79,3 +79,5 @@ export default {
   deleteNews,
   uploadNewsImage,
 };
+
+export default apiNews;

@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import {
   updateCategory as updateCategoryApi,
   uploadCategoryImage,
-} from "../../../../services/apiCategories";
+} from "@/services/apiCategories";
 
 interface UpdateCategoryPayload {
   id: string;
