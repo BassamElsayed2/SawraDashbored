@@ -3,11 +3,41 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import supabase from "../../../../../services/supabase";
-import { apiBranchQR } from "../../../../../services/apiBranchQR";
-import { BranchQRCode } from "../../../../types/feedback";
+import {
+  getBranches,
+  updateBranch,
+  deleteBranch,
+  generateQRCode,
+  getQRCode,
+  BranchQRCode,
+} from "../../../../../services/apiBranchQR";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
+import dynamic from "next/dynamic";
+
+// Load GoogleMapPicker dynamically to avoid SSR issues
+const GoogleMapPicker = dynamic(
+  () => import("../../../../components/GoogleMapPicker"),
+  { ssr: false }
+);
+
+// Helper function to build full image URL
+const getImageUrl = (branch: Branch): string => {
+  // Prefer image_url over legacy image field
+  const imagePath = branch.image_url || branch.image;
+
+  if (!imagePath) return "/placeholder.jpg";
+
+  // If already a full URL, return as is
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  // If relative path, build full URL with backend
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  return `${API_URL}${cleanPath}`;
+};
 
 export interface Branch {
   id: string;
@@ -19,21 +49,26 @@ export interface Branch {
   address_en: string;
   works_hours: string;
   phone: string;
+  email?: string;
   google_map: string;
-  image: string;
+  image?: string; // Legacy field
+  image_url?: string; // Current field
+  lat?: number;
+  lng?: number;
+  is_active?: boolean;
   created_at: string;
 }
 
 type FormData = {
   name_ar: string;
   name_en: string;
-  area_ar: string;
-  area_en: string;
   address_ar: string;
   address_en: string;
-  works_hours: string;
   phone: string;
-  google_map: string;
+  email?: string;
+  google_map?: string;
+  lat?: number;
+  lng?: number;
 };
 
 const BranchesList: React.FC = () => {
@@ -51,6 +86,11 @@ const BranchesList: React.FC = () => {
     null
   );
   const [generatingQR, setGeneratingQR] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    branchId: string;
+    branchName: string;
+  } | null>(null);
   const branchesPerPage = 8;
 
   const {
@@ -63,17 +103,14 @@ const BranchesList: React.FC = () => {
 
   useEffect(() => {
     const fetchBranches = async () => {
-      const { data, error } = await supabase
-        .from("branches")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching branches:", error.message);
-      } else {
+      try {
+        const data = await getBranches();
         setBranchesList(data as Branch[]);
         // Fetch QR codes for all branches
         await fetchQRCodes(data as Branch[]);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+        toast.error("فشل في جلب الفروع");
       }
     };
 
@@ -82,32 +119,40 @@ const BranchesList: React.FC = () => {
 
   const fetchQRCodes = async (branches: Branch[]) => {
     try {
-      const branchIds = branches.map((branch) => branch.id);
-      const qrCodesData = await apiBranchQR.getQRCodesForBranches(branchIds);
-
       const qrCodesMap: { [key: string]: BranchQRCode } = {};
-      qrCodesData.forEach((qrCode) => {
-        qrCodesMap[qrCode.branch_id] = qrCode;
-      });
+
+      // Fetch QR codes for each branch
+      for (const branch of branches) {
+        const qrCode = await getQRCode(branch.id);
+        if (qrCode) {
+          qrCodesMap[branch.id] = qrCode;
+        }
+        // If qrCode is null, it means it doesn't exist yet - this is normal
+      }
 
       setQrCodes(qrCodesMap);
-    } catch {
-      console.error("Error fetching QR codes");
+    } catch (error) {
+      console.error("Error fetching QR codes:", error);
     }
   };
 
   const handleGenerateQRCode = async (branchId: string) => {
     setGeneratingQR(branchId);
+
     try {
-      const qrCode = await apiBranchQR.generateQRCode(branchId);
+      toast.loading("جاري إنشاء رمز QR...", { id: "generate-qr" });
+      const qrCode = await generateQRCode(branchId);
+
+      // Update qrCodes state
       setQrCodes((prev) => ({
         ...prev,
         [branchId]: qrCode,
       }));
-      toast.success("تم إنشاء رمز QR بنجاح");
+
+      toast.success("تم إنشاء رمز QR بنجاح", { id: "generate-qr" });
     } catch (error) {
-      toast.error("فشل في إنشاء رمز QR");
       console.error("Error generating QR code:", error);
+      toast.error("فشل في إنشاء رمز QR", { id: "generate-qr" });
     } finally {
       setGeneratingQR(null);
     }
@@ -132,67 +177,50 @@ const BranchesList: React.FC = () => {
     }
   };
 
-  const handleDeleteBranch = async (id: string) => {
+  const handleDeleteClick = (id: string, branchName: string) => {
+    setDeleteConfirm({ show: true, branchId: id, branchName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const { branchId, branchName } = deleteConfirm;
+    setDeleteConfirm(null);
+
     try {
-      // First get the branch to get its image URL
-      const { data: branch, error: fetchError } = await supabase
-        .from("branches")
-        .select("image")
-        .eq("id", id)
-        .single();
-
-      if (fetchError) {
-        throw new Error("فشل في جلب بيانات الفرع");
-      }
-
-      // Extract the file path from the image URL
-      const imageUrl = branch.image;
-      if (imageUrl) {
-        const urlParts = imageUrl.split("/");
-        const fileName = urlParts[urlParts.length - 1];
-
-        if (fileName) {
-          // Delete the image from storage
-          const { error: storageError } = await supabase.storage
-            .from("branches")
-            .remove([fileName]);
-
-          if (storageError) {
-            console.error("Error deleting image:", storageError);
-            throw new Error("فشل في حذف الصورة من التخزين");
-          }
-        }
-      }
-
-      // Delete the branch record
-      const { error: deleteError } = await supabase
-        .from("branches")
-        .delete()
-        .eq("id", id);
-
-      if (deleteError) {
-        throw new Error("فشل في حذف الفرع");
-      }
-
-      setBranchesList((prev) => prev.filter((branch) => branch.id !== id));
-      toast.success("تم حذف الفرع والصورة بنجاح");
+      toast.loading("جاري حذف الفرع...", { id: "delete-branch" });
+      await deleteBranch(branchId);
+      setBranchesList((prev) =>
+        prev.filter((branch) => branch.id !== branchId)
+      );
+      toast.success(`تم حذف الفرع "${branchName}" بنجاح`, {
+        id: "delete-branch",
+      });
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error("فشل في حذف الفرع", { id: "delete-branch" });
+      console.error(err);
     }
+  };
+
+  const cancelDelete = () => {
+    if (deleteConfirm) {
+      toast("تم إلغاء الحذف", { icon: "ℹ️" });
+    }
+    setDeleteConfirm(null);
   };
 
   const handleEditClick = (branch: Branch) => {
     setSelectedBranch(branch);
     setValue("name_ar", branch.name_ar);
     setValue("name_en", branch.name_en);
-    setValue("area_ar", branch.area_ar);
-    setValue("area_en", branch.area_en);
     setValue("address_ar", branch.address_ar);
     setValue("address_en", branch.address_en);
-    setValue("works_hours", branch.works_hours);
     setValue("phone", branch.phone);
-    setValue("google_map", branch.google_map);
-    setPreviewImage(branch.image);
+    setValue("email", branch.email || "");
+    setValue("google_map", branch.google_map || "");
+    setValue("lat", branch.lat || 0);
+    setValue("lng", branch.lng || 0);
+    setPreviewImage(getImageUrl(branch));
     setIsEditModalOpen(true);
   };
 
@@ -209,40 +237,35 @@ const BranchesList: React.FC = () => {
     setLoading(true);
 
     try {
-      let imageUrl = selectedBranch.image;
+      let imageUrl: string | undefined = undefined;
 
+      // Upload image if a new one is selected
       if (selectedImage) {
-        const fileExt = selectedImage.name.split(".").pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: imageUploadError } = await supabase.storage
-          .from("branches")
-          .upload(fileName, selectedImage);
-
-        if (imageUploadError) {
-          throw new Error("فشل في رفع الصورة");
+        try {
+          toast("جاري رفع الصورة...", { icon: "📤" });
+          const { uploadBranchImage } = await import(
+            "../../../../../services/apiUpload"
+          );
+          const uploadResponse = await uploadBranchImage(selectedImage);
+          imageUrl = uploadResponse.imageUrl;
+          toast.success("تم رفع الصورة بنجاح");
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("فشل في رفع الصورة، سيتم التحديث بدون تغيير الصورة");
+          // Continue without changing image
         }
-
-        imageUrl = supabase.storage.from("branches").getPublicUrl(fileName)
-          .data.publicUrl;
       }
 
-      const { error: updateError } = await supabase
-        .from("branches")
-        .update({ ...data, image: imageUrl })
-        .eq("id", selectedBranch.id);
+      const updatedData = {
+        ...data,
+        ...(imageUrl && { image_url: imageUrl }), // Only update image if new one was uploaded
+      };
 
-      if (updateError) {
-        throw new Error("حدث خطأ أثناء تحديث البيانات");
-      }
+      await updateBranch(selectedBranch.id, updatedData);
 
-      setBranchesList((prev) =>
-        prev.map((branch) =>
-          branch.id === selectedBranch.id
-            ? { ...branch, ...data, image: imageUrl }
-            : branch
-        )
-      );
+      // Refresh the list
+      const branches = await getBranches();
+      setBranchesList(branches as Branch[]);
 
       toast.success("تم تحديث الفرع بنجاح");
       setIsEditModalOpen(false);
@@ -251,7 +274,8 @@ const BranchesList: React.FC = () => {
       setPreviewImage(null);
       setSelectedBranch(null);
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error("حدث خطأ أثناء التحديث");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -348,9 +372,9 @@ const BranchesList: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-3 px-3">
-                    {branch.image ? (
+                    {branch.image_url || branch.image ? (
                       <Image
-                        src={branch.image}
+                        src={getImageUrl(branch)}
                         alt={branch.name_ar}
                         width={60}
                         height={40}
@@ -377,7 +401,9 @@ const BranchesList: React.FC = () => {
                         </i>
                       </button>
                       <button
-                        onClick={() => handleDeleteBranch(branch.id)}
+                        onClick={() =>
+                          handleDeleteClick(branch.id, branch.name_ar)
+                        }
                         className="text-danger-500 leading-none"
                       >
                         <i className="material-symbols-outlined !text-md">
@@ -504,48 +530,6 @@ const BranchesList: React.FC = () => {
 
                   <div>
                     <label className="mb-2 block font-medium text-black dark:text-white">
-                      اسم المنطقة (ar)
-                    </label>
-                    <input
-                      {...register("area_ar", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "اسم المنطقة يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.area_ar && (
-                      <p className="text-red-500 mt-1">
-                        {errors.area_ar.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      اسم المنطقة (en)
-                    </label>
-                    <input
-                      {...register("area_en", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "اسم المنطقة يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.area_en && (
-                      <p className="text-red-500 mt-1">
-                        {errors.area_en.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
                       العنوان (ar)
                     </label>
                     <input
@@ -588,27 +572,6 @@ const BranchesList: React.FC = () => {
 
                   <div>
                     <label className="mb-2 block font-medium text-black dark:text-white">
-                      ساعات العمل
-                    </label>
-                    <input
-                      {...register("works_hours", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "ساعات العمل يجب أن تكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.works_hours && (
-                      <p className="text-red-500 mt-1">
-                        {errors.works_hours.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
                       رقم الهاتف
                     </label>
                     <input
@@ -628,25 +591,66 @@ const BranchesList: React.FC = () => {
                     )}
                   </div>
 
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block font-medium text-black dark:text-white">
+                      اختر موقع الفرع على الخريطة
+                    </label>
+                    <GoogleMapPicker
+                      onLocationSelect={(lat, lng) => {
+                        setValue("lat", lat);
+                        setValue("lng", lng);
+                        toast.success(
+                          `تم تحديد الموقع: ${lat.toFixed(4)}, ${lng.toFixed(
+                            4
+                          )}`
+                        );
+                      }}
+                      initialLat={selectedBranch?.lat || 24.7136}
+                      initialLng={selectedBranch?.lng || 46.6753}
+                    />
+                  </div>
+
                   <div>
                     <label className="mb-2 block font-medium text-black dark:text-white">
-                      الموقع الجغرافي (google map)
+                      خط العرض - Latitude (يمكن التعديل)
                     </label>
                     <input
-                      {...register("google_map", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "الرابط يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
+                      type="number"
+                      step="any"
+                      {...register("lat", { valueAsNumber: true })}
+                      placeholder="24.7136"
+                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                    />
+                    {errors.lat && (
+                      <p className="text-red-500 mt-1">{errors.lat.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block font-medium text-black dark:text-white">
+                      خط الطول - Longitude (يمكن التعديل)
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      {...register("lng", { valueAsNumber: true })}
+                      placeholder="46.6753"
+                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                    />
+                    {errors.lng && (
+                      <p className="text-red-500 mt-1">{errors.lng.message}</p>
+                    )}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block font-medium text-black dark:text-white">
+                      الموقع الجغرافي (google map) - اختياري
+                    </label>
+                    <input
+                      {...register("google_map")}
+                      placeholder="رابط خريطة جوجل"
                       className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
                     />
-                    {errors.google_map && (
-                      <p className="text-red-500 mt-1">
-                        {errors.google_map.message || "مطلوب"}
-                      </p>
-                    )}
                   </div>
 
                   <div className="sm:col-span-2">
@@ -769,7 +773,7 @@ const BranchesList: React.FC = () => {
                       <input
                         type="text"
                         value={
-                          selectedQRCode.qr_code_metadata?.survey_url ||
+                          selectedQRCode.survey_url ||
                           `http://localhost:3000/feedback-survey/${selectedQRCode.branch_id}`
                         }
                         readOnly
@@ -778,7 +782,7 @@ const BranchesList: React.FC = () => {
                       <button
                         onClick={() => {
                           const url =
-                            selectedQRCode.qr_code_metadata?.survey_url ||
+                            selectedQRCode.survey_url ||
                             `http://localhost:3000/feedback-survey/${selectedQRCode.branch_id}`;
                           navigator.clipboard.writeText(url);
                           toast.success("تم نسخ الرابط");
@@ -844,6 +848,52 @@ const BranchesList: React.FC = () => {
                 {i + 1}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-[#0c1427] p-6 rounded-lg max-w-md w-full mx-4">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mr-4">
+                  <i className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">
+                    warning
+                  </i>
+                </div>
+                <h3 className="text-xl font-semibold text-black dark:text-white">
+                  تأكيد الحذف
+                </h3>
+              </div>
+
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                هل أنت متأكد من حذف الفرع{" "}
+                <span className="font-bold text-black dark:text-white">
+                  &ldquo;{deleteConfirm.branchName}&rdquo;
+                </span>
+                ؟
+                <br />
+                <span className="text-red-600 dark:text-red-400 text-sm">
+                  هذا الإجراء لا يمكن التراجع عنه.
+                </span>
+              </p>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-all flex items-center gap-2"
+                >
+                  <i className="material-symbols-outlined text-sm">delete</i>
+                  حذف الفرع
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

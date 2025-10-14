@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getCurrentUser } from "../../services/apiauth";
+import { useAuth } from "../providers/AuthProvider";
 import DarkMode from "@/components/Authentication/DarkMode";
 import SignInForm from "@/components/Authentication/SignInForm";
 
@@ -11,21 +11,13 @@ export default function Home() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const [showError, setShowError] = useState(error === "unauthorized");
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const user = await getCurrentUser();
-        if (user) {
-          router.push("/dashboard");
-        }
-      } catch (error) {
-        console.error("Error checking user:", error);
-      }
-    };
-
-    checkUser();
-  }, [router]);
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
 
   // إخفاء رسالة الخطأ بعد 10 ثواني
   useEffect(() => {
@@ -40,6 +32,19 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [error, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            جاري التحميل...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

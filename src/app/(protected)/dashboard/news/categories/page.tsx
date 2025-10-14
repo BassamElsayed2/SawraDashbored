@@ -9,7 +9,7 @@ import { useAddCategory } from "@/components/news/categories/useCreateCategory";
 import Link from "next/link";
 
 interface Category {
-  id: string;
+  id?: string;
   name_ar: string;
   name_en: string;
   image_url?: string | null;
@@ -70,7 +70,7 @@ export default function CategoriesPage() {
   };
 
   const handleEditSave = () => {
-    if (!editingCategory) return;
+    if (!editingCategory || !editingCategory.id) return;
     updateCategory(
       {
         id: editingCategory.id,
@@ -91,7 +91,7 @@ export default function CategoriesPage() {
   const closeDeleteModal = () => setDeletingCategory(null);
 
   const handleDeleteConfirm = () => {
-    if (!deletingCategory) return;
+    if (!deletingCategory || !deletingCategory.id) return;
     deleteCategory(deletingCategory.id, {
       onSuccess: () => {
         closeDeleteModal();
@@ -190,7 +190,7 @@ export default function CategoriesPage() {
               </thead>
 
               <tbody className="text-black dark:text-white">
-                {categories?.length === 0 ? (
+                {!Array.isArray(categories) || categories.length === 0 ? (
                   <tr>
                     <td colSpan={2} className="text-center py-8 text-gray-500">
                       لا توجد تصنيفات متاحة

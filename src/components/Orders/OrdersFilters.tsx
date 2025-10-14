@@ -10,8 +10,8 @@ interface OrdersFiltersProps {
     from_date?: string;
     to_date?: string;
   };
-  onFilterChange: (filters: any) => void;
-  branches?: Array<{ id: string; name_ar: string }>;
+  onFilterChange: (filters: Record<string, unknown>) => void;
+  branches?: Array<{ id?: string; name_ar: string }>;
 }
 
 const OrdersFilters: React.FC<OrdersFiltersProps> = ({
@@ -112,11 +112,13 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">جميع الفروع</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name_ar}
-                </option>
-              ))}
+              {branches
+                .filter((branch) => branch.id)
+                .map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name_ar}
+                  </option>
+                ))}
             </select>
           </div>
         )}

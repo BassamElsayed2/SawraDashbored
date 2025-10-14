@@ -1,50 +1,41 @@
 // app/(protected)/ProtectedWrapper.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function ProtectedWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    if (!loading && !user) {
+      // Redirect to home page if not authenticated
+      router.replace("/");
+    }
+  }, [user, loading, router]);
 
-      if (!session) {
-        router.replace("/");
-        return;
-      }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            جارٍ التحقق من الجلسة...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-      // ✅ التحقق من وجود المستخدم في admin_profiles
-      const { data: adminProfile, error } = await supabase
-        .from("admin_profiles")
-        .select("user_id")
-        .eq("user_id", session.user.id)
-        .single();
-
-      // ❌ إذا المستخدم غير موجود في admin_profiles، منعه من الدخول
-      if (error || !adminProfile) {
-        router.replace("/?error=unauthorized");
-        return;
-      }
-
-      setLoading(false);
-    };
-
-    checkSession();
-  }, [router, supabase]);
-
-  if (loading) return <div className="p-4">جارٍ التحقق من الجلسة...</div>;
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
 
   return <>{children}</>;
 }

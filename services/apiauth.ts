@@ -1,55 +1,146 @@
-import supabase from "./supabase";
+// Auth API Service for Dashboard - Uses Express Backend
+import apiClient from "./api-client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// ============================================================
+// Types & Interfaces
+// ============================================================
 
-export async function login({
-  email,
-  password,
-}: {
+export interface SignInData {
   email: string;
   password: string;
-}) {
-  const supabase = createClientComponentClient();
+}
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+export interface User {
+  id: string;
+  email: string;
+  role?: "user" | "admin" | "super_admin" | "manager";
+  full_name?: string;
+  phone?: string;
+  email_verified?: boolean;
+}
 
-  if (error) {
-    throw new Error(error.message);
+export interface AuthResponse {
+  success: boolean;
+  data: {
+    user: User;
+    token?: string;
+  };
+  message?: string;
+}
+
+// ============================================================
+// Auth Functions
+// ============================================================
+
+/**
+ * Sign in with email and password
+ */
+export async function signIn(credentials: SignInData): Promise<AuthResponse> {
+  return apiClient.post<{ user: User; token?: string }>(
+    "/auth/signin",
+    credentials
+  );
+}
+
+/**
+ * Sign out current user
+ */
+export async function signOut(): Promise<{ success: boolean }> {
+  return apiClient.post("/auth/signout");
+}
+
+/**
+ * Get current authenticated user
+ */
+export async function getCurrentUser(): Promise<{
+  success: boolean;
+  data: { user: User | null };
+}> {
+  try {
+    return await apiClient.get<{ user: User | null }>("/auth/me");
+  } catch (error) {
+    return { success: false, data: { user: null } };
   }
-
-  return data;
 }
 
-export async function getCurrentUser() {
-  const supabase = createClientComponentClient();
-  const { data: session } = await supabase.auth.getSession();
-
-  if (!session.session) return null;
-
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error) throw new Error(error.message);
-
-  return data?.user;
+/**
+ * Check if user is authenticated and return user data
+ */
+export async function checkAuth(): Promise<User | null> {
+  try {
+    const response = await getCurrentUser();
+    return response.data.user;
+  } catch (error) {
+    return null;
+  }
 }
 
-export async function getAdminProfileById(userId: string) {
-  const { data, error } = await supabase
-    .from("admin_profiles")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+/**
+ * Verify if current user has admin role
+ */
+export async function verifyAdminRole(): Promise<boolean> {
+  try {
+    const user = await checkAuth();
+    if (!user) return false;
+    const adminRoles = ["admin", "super_admin", "manager"];
+    return adminRoles.includes(user.role || "");
+  } catch (error) {
+    return false;
+  }
 }
 
-export async function logout() {
-  const supabase = createClientComponentClient();
-  const { error } = await supabase.auth.signOut();
-
-  if (error) throw new Error(error.message);
+/**
+ * Change user password
+ */
+export async function changePassword(
+  oldPassword: string,
+  newPassword: string
+): Promise<any> {
+  return apiClient.put("/auth/change-password", {
+    old_password: oldPassword,
+    new_password: newPassword,
+  });
 }
+
+/**
+ * Update user profile
+ */
+export async function updateProfile(data: {
+  full_name?: string;
+  phone?: string;
+}): Promise<any> {
+  return apiClient.put("/auth/profile", data);
+}
+
+/**
+ * Create admin user (development only)
+ * Note: In production, this should use a proper admin creation endpoint
+ */
+export async function createAdminUser(data: {
+  email: string;
+  password: string;
+  full_name: string;
+  phone: string;
+  role?: "admin" | "super_admin" | "manager";
+  job_title?: string;
+  address?: string;
+  about?: string;
+  image_url?: string;
+}): Promise<any> {
+  return apiClient.post("/temp-admin/create", data);
+}
+
+// ============================================================
+// Default Export
+// ============================================================
+
+export default {
+  signIn,
+  signOut,
+  getCurrentUser,
+  checkAuth,
+  verifyAdminRole,
+  changePassword,
+  updateProfile,
+  createAdminUser,
+};

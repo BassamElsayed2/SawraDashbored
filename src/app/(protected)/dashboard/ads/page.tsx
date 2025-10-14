@@ -7,14 +7,11 @@ import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getComboOffers,
-  getComboOfferById,
-  updateComboOffer,
-  deleteComboOffer,
-  uploadComboOfferImage,
-  deleteComboOfferImage,
+  getOffers,
+  updateOffer,
+  deleteOffer,
+  uploadOfferImage,
   type ComboOffer,
-  type UpdateComboOfferData,
 } from "../../../../../services/apiComboOffers";
 
 type FormData = {
@@ -22,9 +19,8 @@ type FormData = {
   title_en: string;
   description_ar: string;
   description_en: string;
-  total_price: number;
-  starts_at: string | null;
-  ends_at: string | null;
+  price: number;
+  original_price?: number;
 };
 
 const ComboOffersList: React.FC = () => {
@@ -48,12 +44,12 @@ const ComboOffersList: React.FC = () => {
   // React Query hooks
   const { data: comboOffersList = [], isLoading } = useQuery({
     queryKey: ["comboOffers"],
-    queryFn: getComboOffers,
+    queryFn: () => getOffers(),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateComboOfferData }) =>
-      updateComboOffer(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<ComboOffer> }) =>
+      updateOffer(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comboOffers"] });
       toast.success("تم تحديث العرض بنجاح");
@@ -69,7 +65,7 @@ const ComboOffersList: React.FC = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteComboOffer,
+    mutationFn: deleteOffer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comboOffers"] });
       toast.success("تم حذف العرض بنجاح");
@@ -118,14 +114,6 @@ const ComboOffersList: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      // First get the offer to get its image URL
-      const offer = await getComboOfferById(id);
-
-      // Delete the image from storage if it exists
-      if (offer.image_url) {
-        await deleteComboOfferImage(offer.image_url);
-      }
-
       // Delete the combo offer record
       await deleteMutation.mutateAsync(id);
     } catch (err) {
@@ -139,13 +127,9 @@ const ComboOffersList: React.FC = () => {
     setValue("title_en", offer.title_en);
     setValue("description_ar", offer.description_ar || "");
     setValue("description_en", offer.description_en || "");
-    setValue("total_price", offer.total_price);
-    setValue(
-      "starts_at",
-      offer.starts_at ? offer.starts_at.split("T")[0] : null
-    );
-    setValue("ends_at", offer.ends_at ? offer.ends_at.split("T")[0] : null);
-    setPreviewImage(offer.image_url);
+    setValue("price", offer.price);
+    setValue("original_price", offer.original_price);
+    setPreviewImage(offer.image_url || null);
     setIsEditModalOpen(true);
   };
 
@@ -164,18 +148,21 @@ const ComboOffersList: React.FC = () => {
       let imageUrl = selectedOffer.image_url;
 
       if (selectedImage) {
-        imageUrl = await uploadComboOfferImage(selectedImage);
+        imageUrl = await uploadOfferImage(selectedImage);
       }
 
-      const updateData: UpdateComboOfferData = {
-        ...data,
+      const updateData: Partial<ComboOffer> = {
+        title_ar: data.title_ar,
+        title_en: data.title_en,
+        description_ar: data.description_ar,
+        description_en: data.description_en,
+        price: data.price,
+        original_price: data.original_price,
         image_url: imageUrl,
-        starts_at: data.starts_at || null,
-        ends_at: data.ends_at || null,
       };
 
       await updateMutation.mutateAsync({
-        id: selectedOffer.id,
+        id: selectedOffer.id!,
         data: updateData,
       });
     } catch (error) {
@@ -202,11 +189,6 @@ const ComboOffersList: React.FC = () => {
       style: "currency",
       currency: "EGP",
     }).format(price);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "غير محدد";
-    return new Date(dateString).toLocaleDateString("ar-EG");
   };
 
   return (
@@ -248,8 +230,7 @@ const ComboOffersList: React.FC = () => {
                   "العنوان",
                   "الوصف",
                   "السعر",
-                  "تاريخ البداية",
-                  "تاريخ النهاية",
+                  "السعر الأصلي",
                   "الصورة",
                   "التاريخ",
                   "أجرأت",
@@ -266,13 +247,13 @@ const ComboOffersList: React.FC = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="py-5 text-center text-gray-400">
+                  <td colSpan={7} className="py-5 text-center text-gray-400">
                     جاري التحميل...
                   </td>
                 </tr>
               ) : paginatedOffers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-5 text-center text-gray-400">
+                  <td colSpan={7} className="py-5 text-center text-gray-400">
                     لا توجد عروض.
                   </td>
                 </tr>
@@ -294,10 +275,13 @@ const ComboOffersList: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-3 font-semibold text-primary-500">
-                      {formatPrice(offer.total_price)}
+                      {formatPrice(offer.price)}
                     </td>
-                    <td className="py-3 px-3">{formatDate(offer.starts_at)}</td>
-                    <td className="py-3 px-3">{formatDate(offer.ends_at)}</td>
+                    <td className="py-3 px-3">
+                      {offer.original_price
+                        ? formatPrice(offer.original_price)
+                        : "-"}
+                    </td>
                     <td className="py-3 px-3">
                       {offer.image_url ? (
                         <Image
@@ -316,7 +300,9 @@ const ComboOffersList: React.FC = () => {
                       )}
                     </td>
                     <td className="py-3 px-3">
-                      {new Date(offer.created_at).toLocaleDateString("ar-EG")}
+                      {offer.created_at
+                        ? new Date(offer.created_at).toLocaleDateString("ar-EG")
+                        : "-"}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex gap-2">
@@ -329,7 +315,9 @@ const ComboOffersList: React.FC = () => {
                           </i>
                         </button>
                         <button
-                          onClick={() => handleDeleteOffer(offer.id)}
+                          onClick={() =>
+                            offer.id && handleDeleteOffer(offer.id)
+                          }
                           className="text-danger-500 leading-none"
                         >
                           <i className="material-symbols-outlined !text-md">
@@ -419,39 +407,39 @@ const ComboOffersList: React.FC = () => {
 
                   <div>
                     <label className="mb-2 block font-medium text-black dark:text-white">
-                      السعر الإجمالي
+                      السعر
                     </label>
                     <input
                       type="number"
                       step="0.01"
-                      {...register("total_price", { required: true, min: 0 })}
+                      {...register("price", {
+                        required: true,
+                        min: 0,
+                        valueAsNumber: true,
+                      })}
                       className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
+                      placeholder="0.00"
                     />
-                    {errors.total_price && (
+                    {errors.price && <p className="text-red-500 mt-1">مطلوب</p>}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block font-medium text-black dark:text-white">
+                      السعر الأصلي (اختياري)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      {...register("original_price", {
+                        min: 0,
+                        valueAsNumber: true,
+                      })}
+                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
+                      placeholder="0.00"
+                    />
+                    {errors.original_price && (
                       <p className="text-red-500 mt-1">مطلوب</p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      تاريخ البداية
-                    </label>
-                    <input
-                      type="date"
-                      {...register("starts_at")}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      تاريخ النهاية
-                    </label>
-                    <input
-                      type="date"
-                      {...register("ends_at")}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
                   </div>
 
                   <div className="sm:col-span-2">

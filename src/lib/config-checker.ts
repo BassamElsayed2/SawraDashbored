@@ -10,11 +10,9 @@ export const configChecker = {
     const missingVars = requiredVars.filter((varName) => !process.env[varName]);
 
     if (missingVars.length > 0) {
-      console.error("❌ Missing environment variables:", missingVars);
       return false;
     }
 
-    console.log("✅ All required environment variables are set");
     return true;
   },
 
@@ -24,21 +22,17 @@ export const configChecker = {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error("❌ Supabase configuration is missing");
       return false;
     }
 
     if (!supabaseUrl.startsWith("https://")) {
-      console.error("❌ Invalid Supabase URL format");
       return false;
     }
 
     if (supabaseKey.length < 50) {
-      console.error("❌ Invalid Supabase key format");
       return false;
     }
 
-    console.log("✅ Supabase configuration is valid");
     return true;
   },
 
@@ -52,31 +46,13 @@ export const configChecker = {
         process.env.NEXT_PUBLIC_ENABLE_FEEDBACK_ANALYTICS,
     };
 
-    console.log("📋 Feature flags status:");
-    Object.entries(flags).forEach(([flag, value]) => {
-      const status = value === "true" ? "✅ Enabled" : "❌ Disabled";
-      console.log(`  ${flag}: ${status}`);
-    });
-
     return flags;
   },
 
   // Run all checks
   runAllChecks: () => {
-    console.log("🔍 Running configuration checks...\n");
-
     const envCheck = configChecker.checkEnvironmentVariables();
     const supabaseCheck = configChecker.checkSupabaseConfig();
-    const flagsCheck = configChecker.checkFeatureFlags();
-
-    console.log("\n📊 Summary:");
-    console.log(`Environment Variables: ${envCheck ? "✅" : "❌"}`);
-    console.log(`Supabase Config: ${supabaseCheck ? "✅" : "❌"}`);
-    console.log(
-      `Feature Flags: ${
-        Object.values(flagsCheck).some((f) => f === "true") ? "✅" : "❌"
-      }`
-    );
 
     return envCheck && supabaseCheck;
   },

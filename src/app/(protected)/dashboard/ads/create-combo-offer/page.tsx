@@ -5,24 +5,23 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import {
-  createComboOffer,
-  uploadComboOfferImage,
+  createOffer,
+  uploadOfferImage,
 } from "../../../../../../services/apiComboOffers";
 import toast from "react-hot-toast";
 import {
   compressImage,
   needsCompression,
   formatFileSize,
-} from "../../../../../../src/lib/image-compression";
+} from "../../../../../lib/image-compression";
 
 type FormData = {
   title_ar: string;
   title_en: string;
   description_ar: string;
   description_en: string;
-  total_price: number;
-  starts_at: string | null;
-  ends_at: string | null;
+  price: number;
+  original_price?: number;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -42,7 +41,7 @@ export default function CreateComboOffer() {
   } = useForm<FormData>();
 
   const createMutation = useMutation({
-    mutationFn: createComboOffer,
+    mutationFn: createOffer,
     onSuccess: () => {
       reset();
       setSelectedImage(null);
@@ -139,17 +138,15 @@ export default function CreateComboOffer() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      let imageUrl = null;
+      let imageUrl: string | undefined;
 
       if (selectedImage) {
-        imageUrl = await uploadComboOfferImage(selectedImage);
+        imageUrl = await uploadOfferImage(selectedImage);
       }
 
       const insertData = {
         ...data,
         image_url: imageUrl,
-        starts_at: data.starts_at || null,
-        ends_at: data.ends_at || null,
       };
 
       await createMutation.mutateAsync(insertData);
@@ -234,48 +231,49 @@ export default function CreateComboOffer() {
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  السعر الإجمالي
+                  السعر
                 </label>
                 <input
                   type="number"
                   step="0.01"
-                  {...register("total_price", {
+                  {...register("price", {
                     required: "السعر مطلوب",
                     min: {
                       value: 0,
                       message: "السعر يجب أن يكون أكبر من صفر",
                     },
+                    valueAsNumber: true,
                   })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
                   placeholder="0.00"
                 />
-                {errors.total_price && (
-                  <p className="text-red-500 mt-1">
-                    {errors.total_price.message}
-                  </p>
+                {errors.price && (
+                  <p className="text-red-500 mt-1">{errors.price.message}</p>
                 )}
               </div>
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  تاريخ البداية
+                  السعر الأصلي (اختياري)
                 </label>
                 <input
-                  type="date"
-                  {...register("starts_at")}
+                  type="number"
+                  step="0.01"
+                  {...register("original_price", {
+                    min: {
+                      value: 0,
+                      message: "السعر الأصلي يجب أن يكون أكبر من صفر",
+                    },
+                    valueAsNumber: true,
+                  })}
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                  placeholder="0.00"
                 />
-              </div>
-
-              <div className="mb-[20px]">
-                <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  تاريخ النهاية
-                </label>
-                <input
-                  type="date"
-                  {...register("ends_at")}
-                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                />
+                {errors.original_price && (
+                  <p className="text-red-500 mt-1">
+                    {errors.original_price.message}
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">

@@ -38,7 +38,7 @@ import {
   compressImage,
   needsCompression,
   formatFileSize,
-} from "../../../../../../src/lib/image-compression";
+} from "../../../../../lib/image-compression";
 
 interface ProductFormData {
   title_ar: string;
@@ -183,7 +183,6 @@ export default function EditProductPage() {
   // Types management
   const addType = () => {
     const newType: ProductType = {
-      product_id: id || "",
       name_ar: "",
       name_en: "",
     };
@@ -223,10 +222,9 @@ export default function EditProductPage() {
   // Sizes management
   const addSize = (typeIndex: number) => {
     const newSize: ProductSize = {
-      type_id: "",
       size_ar: "",
       size_en: "",
-      price: 0,
+      price: 0.01, // Minimum positive price to pass validation
       offer_price: undefined,
     };
 
@@ -287,17 +285,14 @@ export default function EditProductPage() {
       };
 
       // تنفيذ التحديث في Supabase
-      const updated = await updateProduct(id, updatedData);
-
-      console.log("تم تحديث المنتج بنجاح:", updated);
+      await updateProduct(id, updatedData);
 
       // يمكنك هنا إعادة التوجيه أو عرض رسالة نجاح
       toast.success("تم تحديث المنتج بنجاح");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push("/dashboard/news");
-    } catch (error: Error | unknown) {
+    } catch {
       toast.error("حدث خطأ ما");
-      console.log("حدث خطأ أثناء تحديث المنتج:", error);
     } finally {
       setIsSubmitting(false);
       setIsUploadingImage(false);
@@ -344,14 +339,17 @@ export default function EditProductPage() {
                       {...register("category_id")}
                       className="h-[55px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
                     >
-                      {categories?.map((category) => (
-                        <option
-                          key={category.id}
-                          value={category.id.toString()}
-                        >
-                          {category.name_ar}
-                        </option>
-                      ))}
+                      {Array.isArray(categories) &&
+                        categories
+                          .filter((category) => category.id)
+                          .map((category) => (
+                            <option
+                              key={category.id}
+                              value={category.id!.toString()}
+                            >
+                              {category.name_ar}
+                            </option>
+                          ))}
                     </select>
                   </div>
                 )}

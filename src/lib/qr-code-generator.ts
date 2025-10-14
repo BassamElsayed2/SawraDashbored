@@ -59,7 +59,6 @@ export const validateAndCleanUrl = (url: string): string => {
     const urlObj = new URL(url);
     return urlObj.origin;
   } catch {
-    console.warn("Invalid URL provided, using fallback:", url);
     return "http://localhost:3000";
   }
 };
@@ -174,7 +173,7 @@ export class QRCodeGenerator {
     options: QRCodeOptions
   ): QRCodeMetadata {
     return {
-      branch_id: branch.id,
+      branch_id: branch.id || "",
       branch_name: branch.name_en || branch.name_ar,
       survey_url: surveyUrl,
       generated_at: new Date().toISOString(),
@@ -258,7 +257,7 @@ export const qrCodeUtils = {
     dataURL: string;
     metadata: QRCodeMetadata;
   }> {
-    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id);
+    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id || "");
     const dataURL = await qrCodeGenerator.generateQRCodeDataURL(
       surveyUrl,
       options
@@ -281,7 +280,7 @@ export const qrCodeUtils = {
     svg: string;
     metadata: QRCodeMetadata;
   }> {
-    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id);
+    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id || "");
     const svg = await qrCodeGenerator.generateQRCodeSVG(surveyUrl, options);
     const metadata = qrCodeGenerator.generateQRCodeMetadata(branch, surveyUrl, {
       ...defaultQROptions,
@@ -301,7 +300,7 @@ export const qrCodeUtils = {
     buffer: Buffer;
     metadata: QRCodeMetadata;
   }> {
-    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id);
+    const surveyUrl = qrCodeGenerator.generateSurveyURL(branch.id || "");
     const buffer = await qrCodeGenerator.generateQRCodeBuffer(
       surveyUrl,
       options

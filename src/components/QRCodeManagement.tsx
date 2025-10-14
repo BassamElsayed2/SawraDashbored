@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { apiBranchQR } from "../../services/apiBranchQR";
+import apiBranchQR from "../../services/apiBranchQR";
 import { apiBranches } from "../../services/apiBranches";
 import { Branch, BranchQRCode } from "../types/feedback";
 import { QRCodeOptions } from "../lib/qr-code-generator";
@@ -79,15 +79,20 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      const [branchesData, qrCodesData, analyticsData] = await Promise.all([
+      const [branchesData, qrCodesData] = await Promise.all([
         apiBranches.getBranches(),
-        apiBranchQR.getBranchQRCodes(),
-        apiBranchQR.getQRCodeAnalytics(),
+        apiBranchQR.getAllQRCodes(),
       ]);
 
       setBranches(branchesData);
       setQRCodes(qrCodesData);
-      setAnalytics(analyticsData);
+      // Analytics not available yet
+      setAnalytics({
+        total_qr_codes: qrCodesData.length,
+        branches_with_qr: qrCodesData.length,
+        total_branches: branchesData.length,
+        qr_generation_stats: { today: 0, this_week: 0, this_month: 0 },
+      });
     } catch (error) {
       console.error("Error loading QR code data:", error);
     } finally {
@@ -100,9 +105,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
 
     setLoading(true);
     try {
-      const newQRCodes = await apiBranchQR.bulkGenerateQRCodes(
-        selectedBranches,
-        qrOptions
+      const newQRCodes = await Promise.all(
+        selectedBranches.map((branchId) => apiBranchQR.generateQRCode(branchId))
       );
       setQRCodes((prev) => {
         const updated = [...prev];
@@ -131,30 +135,12 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
     format: "png" | "svg"
   ) => {
     try {
-      if (format === "svg") {
-        const { svg } = await apiBranchQR.generateQRCodeSVG(
-          branchId,
-          qrOptions
-        );
-        const blob = new Blob([svg], { type: "image/svg+xml" });
-        const url = URL.createObjectURL(blob);
+      const qrCode = await apiBranchQR.getQRCode(branchId);
+      if (qrCode?.qr_code_url) {
         const a = document.createElement("a");
-        a.href = url;
-        a.download = `qr-code-${branchId}.svg`;
+        a.href = qrCode.qr_code_url;
+        a.download = `qr-code-${branchId}.${format}`;
         a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        const { buffer } = await apiBranchQR.generateQRCodeBuffer(
-          branchId,
-          qrOptions
-        );
-        const blob = new Blob([buffer], { type: "image/png" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `qr-code-${branchId}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
       }
     } catch (error) {
       console.error("Error downloading QR code:", error);
@@ -164,7 +150,9 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
   const handleRegenerateQRCode = async (branchId: string) => {
     setLoading(true);
     try {
-      const newQRCode = await apiBranchQR.regenerateQRCode(branchId, qrOptions);
+      // Delete old QR code and generate new one
+      await apiBranchQR.deleteQRCode(branchId);
+      const newQRCode = await apiBranchQR.generateQRCode(branchId);
       setQRCodes((prev) =>
         prev.map((qr) => (qr.branch_id === branchId ? newQRCode : qr))
       );
@@ -177,7 +165,7 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
 
   const handleDeleteQRCode = async (branchId: string) => {
     try {
-      await apiBranchQR.deleteBranchQRCode(branchId);
+      await apiBranchQR.deleteQRCode(branchId);
       setQRCodes((prev) => prev.filter((qr) => qr.branch_id !== branchId));
     } catch (error) {
       console.error("Error deleting QR code:", error);
@@ -308,22 +296,24 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
         <h2 className="text-lg font-semibold mb-4">Bulk QR Code Generation</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
-            {branches.map((branch) => (
-              <label
-                key={branch.id}
-                className="flex items-center space-x-3 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedBranches.includes(branch.id)}
-                  onChange={() => toggleBranchSelection(branch.id)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  {branch.name_en || branch.name_ar}
-                </span>
-              </label>
-            ))}
+            {branches
+              .filter((branch) => branch.id)
+              .map((branch) => (
+                <label
+                  key={branch.id}
+                  className="flex items-center space-x-3 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedBranches.includes(branch.id!)}
+                    onChange={() => toggleBranchSelection(branch.id!)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    {branch.name_en || branch.name_ar}
+                  </span>
+                </label>
+              ))}
           </div>
           <button
             onClick={handleBulkGenerate}

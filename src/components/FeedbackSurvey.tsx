@@ -27,12 +27,8 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
 
   useEffect(() => {
     if (modalRef.current) {
-      const observer = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          // modalSize is used for potential future features
-          console.log(`Modal size: ${width}x${height}`);
-        }
+      const observer = new ResizeObserver(() => {
+        // Modal size tracking for potential future features
       });
       observer.observe(modalRef.current);
       return () => observer.disconnect();
@@ -83,9 +79,12 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
       try {
         if (branchId) {
           const branchData = await apiBranches.getPublicBranch(branchId);
-          if (branchData) {
+          if (branchData && branchData.id) {
             setBranch(branchData);
-            setFormData((prev) => ({ ...prev, branch_id: branchData.id }));
+            setFormData((prev) => ({
+              ...prev,
+              branch_id: branchData.id as string,
+            }));
             setBranchLoading(false);
           } else {
             router.push("/404");
@@ -167,15 +166,18 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
 
     setLoading(true);
     try {
-      await apiCustomerFeedback.submitFeedback({
+      const dataToSend = {
         ...formData,
         customer_name: formData.customer_name.trim() || "زائر",
         phone_number: formData.phone_number.trim() || "غير محدد",
-      });
+      };
+
+      await apiCustomerFeedback.submitFeedback(dataToSend);
       setShowModal(true);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
-    } catch {
+    } catch (error) {
+      console.error("❌ Error submitting feedback:", error);
       alert("حدث خطأ أثناء الإرسال، حاول مرة أخرى");
     } finally {
       setLoading(false);

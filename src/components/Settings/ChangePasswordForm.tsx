@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import * as apiAuth from "../../../services/apiAuth";
+import toast from "react-hot-toast";
 
 const ChangePasswordForm: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -80,46 +81,32 @@ const ChangePasswordForm: React.FC = () => {
     }
 
     try {
-      const supabase = createClientComponentClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      // Call backend API to change password
+      const response = await apiAuth.changePassword(
+        currentPassword,
+        newPassword
+      );
 
-      if (userError || !user?.email) {
-        setMessage("لم يتم العثور على المستخدم.");
-        setLoading(false);
-        return;
-      }
-
-      // تسجيل الدخول لتأكيد كلمة السر الحالية
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        setMessage("كلمة السر الحالية غير صحيحة.");
-        setLoading(false);
-        return;
-      }
-
-      // تحديث كلمة السر
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        setMessage("حدث خطأ أثناء تحديث كلمة السر.");
-      } else {
-        setMessage("تم تحديث كلمة السر بنجاح.");
+      if (response.success) {
+        toast.success("تم تحديث كلمة السر بنجاح. سيتم تسجيل خروجك.");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        router.push("/dashboard/my-profile");
+
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push("/auth/signin");
+        }, 1500);
+      } else {
+        setMessage(response.message || "حدث خطأ أثناء تحديث كلمة السر.");
       }
-    } catch (err) {
-      setMessage("حدث خطأ غير متوقع.");
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { data?: { message?: string }; message?: string })?.data
+          ?.message ||
+        (err as { message?: string })?.message ||
+        "حدث خطأ غير متوقع.";
+      setMessage(errorMessage);
       console.error("Error changing password:", err);
     }
 

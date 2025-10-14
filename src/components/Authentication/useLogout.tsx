@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { logout as logoutApi } from "../../../services/apiauth";
+import { signOut } from "../../../services/apiAuth";
 import { useRouter } from "next/navigation";
 
 export function useLogout() {
@@ -7,7 +7,7 @@ export function useLogout() {
   const queryClient = useQueryClient();
 
   const { mutate: logout, isPending: isLoggingOut } = useMutation({
-    mutationFn: logoutApi,
+    mutationFn: signOut,
     onSuccess: () => {
       queryClient.removeQueries();
       router.replace("/");

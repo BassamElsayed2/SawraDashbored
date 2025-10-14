@@ -1,5 +1,5 @@
 // Orders API Service - Uses Express Backend
-import apiClient from "../../services/api-client";
+import apiClient from "./api-client";
 
 export interface OrderItem {
   id?: string;
@@ -32,7 +32,6 @@ export interface Order {
     | "confirmed"
     | "preparing"
     | "ready"
-    | "delivering"
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
@@ -90,19 +89,12 @@ export const ordersApi = {
       }
 
       const queryString = params.toString();
-      const response = await apiClient.get<{
-        success: boolean;
-        data: {
-          orders: Order[];
-          total: number;
-          page: number;
-          limit: number;
-          totalPages: number;
-        };
-      }>(`/orders/admin/all${queryString ? `?${queryString}` : ""}`);
+      const response = await apiClient.get<{ orders: Order[] }>(
+        `/orders${queryString ? `?${queryString}` : ""}`
+      );
 
       return {
-        data: (response as { data?: { orders?: Order[] } })?.data?.orders || [],
+        data: response.data.orders || [],
         error: null,
       };
     } catch (error: unknown) {
@@ -115,12 +107,9 @@ export const ordersApi = {
 
   getOrderById: async (id: string) => {
     try {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: { order: Order };
-      }>(`/orders/admin/${id}`);
+      const response = await apiClient.get<{ order: Order }>(`/orders/${id}`);
       return {
-        data: (response as { data?: { order?: Order } })?.data?.order || null,
+        data: response.data.order || null,
         error: null,
       };
     } catch (error: unknown) {
@@ -138,7 +127,7 @@ export const ordersApi = {
         orderData
       );
       return {
-        data: (response as unknown as { order: Order }).order || null,
+        data: response.data.order || null,
         error: null,
       };
     } catch (error: unknown) {
@@ -156,7 +145,7 @@ export const ordersApi = {
         orderData
       );
       return {
-        data: (response as unknown as { order: Order }).order || null,
+        data: response.data.order || null,
         error: null,
       };
     } catch (error: unknown) {
@@ -173,15 +162,15 @@ export const ordersApi = {
     notes?: string
   ) => {
     try {
-      const response = await apiClient.put<{
-        success: boolean;
-        data: { order: Order };
-      }>(`/orders/${id}/status`, {
-        status,
-        notes,
-      });
+      const response = await apiClient.put<{ order: Order }>(
+        `/orders/${id}/status`,
+        {
+          status,
+          notes,
+        }
+      );
       return {
-        data: (response as { data?: { order?: Order } })?.data?.order || null,
+        data: response.data.order || null,
         error: null,
       };
     } catch (error: unknown) {
@@ -201,7 +190,7 @@ export const ordersApi = {
         }
       );
       return {
-        data: (response as unknown as { order: Order }).order || null,
+        data: response.data.order || null,
         error: null,
       };
     } catch (error: unknown) {
@@ -244,14 +233,12 @@ export const ordersApi = {
       }
 
       const queryString = params.toString();
-      const response = await apiClient.get<{
-        success: boolean;
-        data: { stats: OrderStats };
-      }>(`/orders/stats${queryString ? `?${queryString}` : ""}`);
+      const response = await apiClient.get<{ stats: OrderStats }>(
+        `/orders/stats${queryString ? `?${queryString}` : ""}`
+      );
 
       return {
-        data:
-          (response as { data?: { stats?: OrderStats } })?.data?.stats || null,
+        data: response.data.stats || null,
         error: null,
       };
     } catch (error: unknown) {

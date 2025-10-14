@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import QueryProvider from "@/providers/QueryProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 import { Toaster } from "react-hot-toast";
 
@@ -32,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="rtl">
       <body className={`${inter.variable} antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
         <Toaster position="top-center" />
       </body>
     </html>

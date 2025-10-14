@@ -1,148 +1,84 @@
-import supabase from "./supabase";
+// Combo Offers API Service - Uses Express Backend instead of Supabase
+import apiClient from "./api-client";
 
 export interface ComboOffer {
-  id: string;
+  id?: string;
   title_ar: string;
   title_en: string;
-  description_ar: string | null;
-  description_en: string | null;
-  image_url: string | null;
-  total_price: number;
-  starts_at: string | null;
-  ends_at: string | null;
-  created_at: string;
+  description_ar?: string;
+  description_en?: string;
+  image_url?: string;
+  price: number;
+  original_price?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface CreateComboOfferData {
-  title_ar: string;
-  title_en: string;
-  description_ar: string;
-  description_en: string;
-  total_price: number;
-  starts_at: string | null;
-  ends_at: string | null;
-  image_url?: string | null;
+export async function getOffers(filters?: {
+  is_active?: boolean;
+  search?: string;
+}): Promise<ComboOffer[]> {
+  const params = new URLSearchParams();
+
+  if (filters?.is_active !== undefined) {
+    params.append("is_active", filters.is_active.toString());
+  }
+
+  if (filters?.search) {
+    params.append("search", filters.search);
+  }
+
+  const queryString = params.toString();
+  const response = await apiClient.get<{ offers: ComboOffer[] }>(
+    `/combo-offers${queryString ? `?${queryString}` : ""}`
+  );
+
+  return response.data.offers || [];
 }
 
-export interface UpdateComboOfferData {
-  title_ar: string;
-  title_en: string;
-  description_ar: string;
-  description_en: string;
-  total_price: number;
-  starts_at: string | null;
-  ends_at: string | null;
-  image_url?: string | null;
+export async function getOfferById(id: string): Promise<ComboOffer> {
+  const response = await apiClient.get<{ offer: ComboOffer }>(
+    `/combo-offers/${id}`
+  );
+  return response.data.offer;
 }
 
-// Get all combo offers
-export const getComboOffers = async (): Promise<ComboOffer[]> => {
-  const { data, error } = await supabase
-    .from("combo_offers")
-    .select("*")
-    .order("created_at", { ascending: false });
+export async function createOffer(offerData: ComboOffer): Promise<ComboOffer> {
+  const response = await apiClient.post<{ offer: ComboOffer }>(
+    "/combo-offers",
+    offerData
+  );
+  return response.data.offer;
+}
 
-  if (error) {
-    throw new Error(`Error fetching combo offers: ${error.message}`);
-  }
-
-  return data || [];
-};
-
-// Get single combo offer by ID
-export const getComboOfferById = async (id: string): Promise<ComboOffer> => {
-  const { data, error } = await supabase
-    .from("combo_offers")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    throw new Error(`Error fetching combo offer: ${error.message}`);
-  }
-
-  return data;
-};
-
-// Create new combo offer
-export const createComboOffer = async (
-  offerData: CreateComboOfferData
-): Promise<ComboOffer> => {
-  const { data, error } = await supabase
-    .from("combo_offers")
-    .insert([offerData])
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Error creating combo offer: ${error.message}`);
-  }
-
-  return data;
-};
-
-// Update combo offer
-export const updateComboOffer = async (
+export async function updateOffer(
   id: string,
-  offerData: UpdateComboOfferData
-): Promise<ComboOffer> => {
-  const { data, error } = await supabase
-    .from("combo_offers")
-    .update(offerData)
-    .eq("id", id)
-    .select()
-    .single();
+  updatedOffer: Partial<ComboOffer>
+): Promise<ComboOffer> {
+  const response = await apiClient.put<{ offer: ComboOffer }>(
+    `/combo-offers/${id}`,
+    updatedOffer
+  );
+  return response.data.offer;
+}
 
-  if (error) {
-    throw new Error(`Error updating combo offer: ${error.message}`);
-  }
+export async function deleteOffer(id: string): Promise<void> {
+  await apiClient.delete(`/combo-offers/${id}`);
+}
 
-  return data;
-};
+export async function uploadOfferImage(file: File): Promise<string> {
+  const response = await apiClient.uploadFile("/upload/image", file, {
+    folder: "offers",
+  });
+  return response.data.url || response.data.imageUrl;
+}
 
-// Delete combo offer
-export const deleteComboOffer = async (id: string): Promise<void> => {
-  const { error } = await supabase.from("combo_offers").delete().eq("id", id);
-
-  if (error) {
-    throw new Error(`Error deleting combo offer: ${error.message}`);
-  }
-};
-
-// Upload image to storage
-export const uploadComboOfferImage = async (file: File): Promise<string> => {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("combooffersmedia")
-    .upload(fileName, file);
-
-  if (uploadError) {
-    throw new Error(`Error uploading image: ${uploadError.message}`);
-  }
-
-  const { data } = supabase.storage
-    .from("combooffersmedia")
-    .getPublicUrl(fileName);
-
-  return data.publicUrl;
-};
-
-// Delete image from storage
-export const deleteComboOfferImage = async (
-  imageUrl: string
-): Promise<void> => {
-  const urlParts = imageUrl.split("/");
-  const fileName = urlParts[urlParts.length - 1];
-
-  if (fileName) {
-    const { error } = await supabase.storage
-      .from("combooffersmedia")
-      .remove([fileName]);
-
-    if (error) {
-      throw new Error(`Error deleting image: ${error.message}`);
-    }
-  }
+export default {
+  getOffers,
+  getOfferById,
+  createOffer,
+  updateOffer,
+  deleteOffer,
+  uploadOfferImage,
 };

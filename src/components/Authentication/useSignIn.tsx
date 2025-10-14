@@ -1,17 +1,13 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import {
-  login as loginApi,
-  getAdminProfileById,
-} from "../../../services/apiauth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { signIn } from "../../../services/apiAuth";
 import { toast } from "react-hot-toast";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 
 export function useSignIn() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const queryClient = useQueryClient();
 
   const {
     mutate: login,
@@ -19,38 +15,49 @@ export function useSignIn() {
     error,
   } = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
-      loginApi({ email, password }),
+      signIn({ email, password }),
     onSuccess: async (data) => {
       try {
-        // ✅ التحقق من وجود المستخدم في admin_profiles
-        const { data: adminProfile } = await supabase
-          .from("admin_profiles")
-          .select("user_id")
-          .eq("user_id", data.user.id)
-          .single();
+        const user = data.data.user;
 
-        // ❌ إذا المستخدم غير موجود في admin_profiles
-        if (!adminProfile) {
-          // تسجيل الخروج فوراً
-          await supabase.auth.signOut();
+        // ✅ التحقق من صلاحيات Admin
+        const adminRoles = ["admin", "super_admin", "manager"];
+        if (!user.role || !adminRoles.includes(user.role)) {
           toast.error("عذراً، ليس لديك صلاحيات للوصول إلى لوحة التحكم");
-          router.push("/?error=unauthorized");
+
+          // Invalidate queries and redirect
+          queryClient.clear();
+          setTimeout(() => {
+            router.replace("/?error=unauthorized");
+          }, 1000);
           return;
         }
 
-        // ✅ المستخدم لديه صلاحيات - متابعة تسجيل الدخول
+        // ✅ المستخدم لديه صلاحيات Admin - متابعة تسجيل الدخول
         toast.success("تم تسجيل الدخول بنجاح");
-        router.push("/dashboard");
+
+        // Invalidate auth queries to refresh user state
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+
+        // Use Next.js router for navigation
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh(); // Refresh server components
+        }, 500);
       } catch (error) {
-        console.error("Error checking admin profile:", error);
-        await supabase.auth.signOut();
-        toast.error("حدث خطأ أثناء التحقق من الصلاحيات");
-        router.push("/?error=unauthorized");
+        console.error("Error during sign in:", error);
+        // تنظيف حالة React Query عند حدوث خطأ
+        queryClient.clear();
+        toast.error("حدث خطأ أثناء تسجيل الدخول");
       }
     },
     onError: (error: Error) => {
       console.error("Login error:", error);
-      toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      // تنظيف حالة React Query عند فشل تسجيل الدخول
+      queryClient.clear();
+      toast.error(
+        error.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+      );
     },
   });
 

@@ -1,19 +1,37 @@
-import supabase from "./supabase";
+// About Us API Service - Uses Express Backend instead of Supabase
+import apiClient from "./api-client";
 
-export interface SiteSettings {
-  site_name_ar: string;
-  site_name_en: string;
-  about_us_ar: string;
-  about_us_en: string;
-  logo_url: string;
+export interface AboutUsContent {
+  id?: string;
+  title_ar?: string;
+  title_en?: string;
+  content_ar: string;
+  content_en: string;
+  mission_ar?: string;
+  mission_en?: string;
+  vision_ar?: string;
+  vision_en?: string;
+  values_ar?: string;
+  values_en?: string;
+  updated_at?: string;
 }
 
-export async function getAboutUs(): Promise<SiteSettings> {
-  const { data: site_settings, error } = await supabase
-    .from("site_settings")
-    .select("*")
-    .single();
-
-  if (error) throw error;
-  return site_settings;
+export async function getAboutUs(): Promise<AboutUsContent> {
+  const response = await apiClient.get<{ content: AboutUsContent }>("/about");
+  return response.data.content;
 }
+
+export async function updateAboutUs(
+  content: Partial<AboutUsContent>
+): Promise<AboutUsContent> {
+  const response = await apiClient.put<{ content: AboutUsContent }>(
+    "/about",
+    content
+  );
+  return response.data.content;
+}
+
+export default {
+  getAboutUs,
+  updateAboutUs,
+};

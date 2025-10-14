@@ -1,18 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser } from "../../../services/apiauth";
+import { useAuth } from "../../providers/AuthProvider";
 
 export function useUser() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: getCurrentUser,
-    retry: false,
-  });
+  const { user, loading } = useAuth();
 
   return {
     user,
-    isLoading,
-    isAuthenticated: user?.role === "authenticated",
+    isLoading: loading,
+    isAuthenticated:
+      !!user && ["admin", "super_admin", "manager"].includes(user.role || ""),
   };
 }

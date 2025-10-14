@@ -169,11 +169,13 @@ export const FeedbackFiltersComponent: React.FC<
                 dir="rtl"
               >
                 <option value="">جميع الفروع</option>
-                {branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name_ar || branch.name_en}
-                  </option>
-                ))}
+                {branches
+                  .filter((branch) => branch.id)
+                  .map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name_ar || branch.name_en}
+                    </option>
+                  ))}
               </select>
             )}
           />
