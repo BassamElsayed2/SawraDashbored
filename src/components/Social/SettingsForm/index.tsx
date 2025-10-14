@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import supabase from "../../../../services/supabase";
+import apiClient from "../../../../services/api-client";
 import { profileSchema } from "./lib/validations/schema";
 import { z } from "zod";
 import {
@@ -34,7 +34,10 @@ const SettingsForm: React.FC = () => {
   // تحديث قيم الفورم عندما تتغير بيانات profile
   useEffect(() => {
     if (profile) {
-      reset(profile);
+      reset({
+        ...profile,
+        phone: profile.phone?.toString(),
+      });
     }
   }, [profile, reset]);
 
@@ -95,21 +98,15 @@ const SettingsForm: React.FC = () => {
   };
 
   const uploadImage = async (file: File) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `profile-pictures/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
+    try {
+      const response = await apiClient.uploadFile("/upload/image", file, {
+        folder: "profile-pictures",
       });
-
-    if (error) throw error;
-
-    const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    return data.publicUrl;
+      return response.data.url || response.data.imageUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw new Error("فشل رفع الصورة");
+    }
   };
 
   const submit = async (formData: z.infer<typeof profileSchema>) => {
@@ -117,26 +114,36 @@ const SettingsForm: React.FC = () => {
       let image_url = profile?.image_url;
 
       if (profilePicture) {
+        toast.loading("جارٍ رفع الصورة...");
         image_url = await uploadImage(profilePicture);
+        toast.dismiss();
       }
 
-      const { error } = await supabase
-        .from("admin_profiles")
-        .update({
-          ...formData,
-          image_url,
-        })
-        .eq("user_id", profile?.user_id);
+      toast.loading("جارٍ تحديث الملف الشخصي...");
 
-      if (error) throw error;
+      // Update admin profile using the new endpoint
+      await apiClient.put("/admin/profile", {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        job_title: formData.job_title,
+        address: formData.address,
+        about: formData.about,
+        image_url: image_url,
+      });
 
-      router.refresh();
-      router.push("/dashboard/my-profile");
+      toast.dismiss();
+      toast.success("تم تحديث الملف الشخصي بنجاح");
+
+      // Redirect to my profile page
+      router.push("/dashboard/my-profile/");
     } catch (error: unknown) {
+      toast.dismiss();
       if (error instanceof Error) {
         console.error("Update error:", error.message);
+        toast.error(error.message || "حدث خطأ أثناء التحديث");
       } else {
         console.error("Unknown error", error);
+        toast.error("حدث خطأ غير متوقع");
       }
     }
   };
@@ -288,7 +295,8 @@ const SettingsForm: React.FC = () => {
                               src={
                                 profilePicture
                                   ? URL.createObjectURL(profilePicture)
-                                  : profile.image_url
+                                  : profile?.image_url ||
+                                    "/placeholder-user.jpg"
                               }
                               alt="profile-preview"
                               width={80}

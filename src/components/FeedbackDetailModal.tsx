@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FeedbackWithRatings } from "../types/feedback";
+import toast from "react-hot-toast";
 
 interface FeedbackDetailModalProps {
   feedback: FeedbackWithRatings;
@@ -16,6 +17,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
   onClose,
   onDelete,
 }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   if (!isOpen || !feedback) {
     return null;
   }
@@ -51,10 +55,84 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
     return categories[category as keyof typeof categories] || category;
   };
 
-  const handleDelete = () => {
-    if (confirm("هل أنت متأكد من حذف هذا التقييم؟")) {
-      onDelete(feedback.id!);
-      onClose();
+  const handleDelete = async () => {
+    if (showDeleteConfirm) {
+      setIsDeleting(true);
+      try {
+        await onDelete(feedback.id!);
+        toast.success("تم حذف التقييم بنجاح", {
+          duration: 3000,
+          position: "top-center",
+          icon: "✅",
+          style: {
+            background: "#10B981",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "600",
+          },
+        });
+        onClose();
+      } catch {
+        toast.error("حدث خطأ أثناء حذف التقييم", {
+          duration: 4000,
+          position: "top-center",
+          icon: "❌",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "600",
+          },
+        });
+      } finally {
+        setIsDeleting(false);
+        setShowDeleteConfirm(false);
+      }
+    } else {
+      setShowDeleteConfirm(true);
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-3" dir="rtl">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">⚠️</span>
+              <p className="text-base font-bold text-gray-800">
+                هل أنت متأكد من حذف هذا التقييم؟
+              </p>
+            </div>
+            <div className="text-sm text-gray-600">
+              هذا الإجراء لا يمكن التراجع عنه
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  setShowDeleteConfirm(false);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  handleDelete();
+                }}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                حذف
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: 10000,
+          position: "top-center",
+          style: {
+            minWidth: "400px",
+            padding: "20px",
+          },
+        }
+      );
     }
   };
 
@@ -237,95 +315,110 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                     ))
                   ) : (
                     <>
-                      {feedback.reception_rating && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700" dir="rtl">
-                            الاستقبال والترحيب
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRatingColor(
-                              feedback.reception_rating
-                            )}`}
-                            dir="rtl"
-                          >
-                            {feedback.reception_rating} ⭐{" "}
-                            {getRatingLabel(feedback.reception_rating)}
-                          </span>
-                        </div>
-                      )}
-                      {feedback.speed_service_rating && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700" dir="rtl">
-                            سرعة الخدمة
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRatingColor(
-                              feedback.speed_service_rating
-                            )}`}
-                            dir="rtl"
-                          >
-                            {feedback.speed_service_rating} ⭐{" "}
-                            {getRatingLabel(feedback.speed_service_rating)}
-                          </span>
-                        </div>
-                      )}
-                      {feedback.quality_rating && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700" dir="rtl">
-                            جودة الطعام
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRatingColor(
-                              feedback.quality_rating
-                            )}`}
-                            dir="rtl"
-                          >
-                            {feedback.quality_rating} ⭐{" "}
-                            {getRatingLabel(feedback.quality_rating)}
-                          </span>
-                        </div>
-                      )}
-                      {feedback.cleanliness_rating && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700" dir="rtl">
-                            مستوي النظافه
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRatingColor(
-                              feedback.cleanliness_rating
-                            )}`}
-                            dir="rtl"
-                          >
-                            {feedback.cleanliness_rating} ⭐{" "}
-                            {getRatingLabel(feedback.cleanliness_rating)}
-                          </span>
-                        </div>
-                      )}
-                      {feedback.catering_rating && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700" dir="rtl">
-                            طريقة تقديم الطلب
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getRatingColor(
-                              feedback.catering_rating
-                            )}`}
-                            dir="rtl"
-                          >
-                            {feedback.catering_rating} ⭐{" "}
-                            {getRatingLabel(feedback.catering_rating)}
-                          </span>
-                        </div>
-                      )}
-                      {!feedback.reception_rating &&
-                        !feedback.speed_service_rating &&
-                        !feedback.quality_rating &&
-                        !feedback.cleanliness_rating &&
-                        !feedback.catering_rating && (
-                          <div className="text-sm text-gray-500" dir="rtl">
-                            لا توجد تقييمات تفصيلية متاحة
-                          </div>
-                        )}
+                      {/* Always show all 5 rating categories */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700" dir="rtl">
+                          الاستقبال والترحيب
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            feedback.reception_rating
+                              ? getRatingColor(feedback.reception_rating)
+                              : "text-gray-400 bg-gray-100"
+                          }`}
+                          dir="rtl"
+                        >
+                          {feedback.reception_rating
+                            ? `${feedback.reception_rating} ⭐ ${getRatingLabel(
+                                feedback.reception_rating
+                              )}`
+                            : "لم يتم التقييم"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700" dir="rtl">
+                          سرعة الخدمة
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            feedback.service_speed_rating
+                              ? getRatingColor(feedback.service_speed_rating)
+                              : "text-gray-400 bg-gray-100"
+                          }`}
+                          dir="rtl"
+                        >
+                          {feedback.service_speed_rating
+                            ? `${
+                                feedback.service_speed_rating
+                              } ⭐ ${getRatingLabel(
+                                feedback.service_speed_rating
+                              )}`
+                            : "لم يتم التقييم"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700" dir="rtl">
+                          جودة الطعام
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            feedback.quality_rating
+                              ? getRatingColor(feedback.quality_rating)
+                              : "text-gray-400 bg-gray-100"
+                          }`}
+                          dir="rtl"
+                        >
+                          {feedback.quality_rating
+                            ? `${feedback.quality_rating} ⭐ ${getRatingLabel(
+                                feedback.quality_rating
+                              )}`
+                            : "لم يتم التقييم"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700" dir="rtl">
+                          مستوي النظافه
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            feedback.cleanliness_rating
+                              ? getRatingColor(feedback.cleanliness_rating)
+                              : "text-gray-400 bg-gray-100"
+                          }`}
+                          dir="rtl"
+                        >
+                          {feedback.cleanliness_rating
+                            ? `${
+                                feedback.cleanliness_rating
+                              } ⭐ ${getRatingLabel(
+                                feedback.cleanliness_rating
+                              )}`
+                            : "لم يتم التقييم"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700" dir="rtl">
+                          طريقة تقديم الطلب
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            feedback.catering_rating
+                              ? getRatingColor(feedback.catering_rating)
+                              : "text-gray-400 bg-gray-100"
+                          }`}
+                          dir="rtl"
+                        >
+                          {feedback.catering_rating
+                            ? `${feedback.catering_rating} ⭐ ${getRatingLabel(
+                                feedback.catering_rating
+                              )}`
+                            : "لم يتم التقييم"}
+                        </span>
+                      </div>
                     </>
                   )}
                 </div>
@@ -388,15 +481,51 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
             <button
               type="button"
               onClick={handleDelete}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+              disabled={isDeleting}
+              className={`w-full inline-flex justify-center items-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200 ${
+                isDeleting
+                  ? "bg-red-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
               dir="rtl"
             >
-              حذف التقييم
+              {isDeleting ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  جاري الحذف...
+                </>
+              ) : (
+                "حذف التقييم"
+              )}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+              disabled={isDeleting}
+              className={`mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200 ${
+                isDeleting
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-50"
+              }`}
               dir="rtl"
             >
               إغلاق

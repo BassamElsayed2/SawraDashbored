@@ -6,7 +6,7 @@ import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { useQuery } from "@tanstack/react-query";
 
 import { getProducts } from "../../../../services/apiProducts";
-import { getComboOffers } from "../../../../services/apiComboOffers";
+import { getOffers } from "../../../../services/apiComboOffers";
 
 const Welcome: React.FC = () => {
   const { data: profile } = useAdminProfile();
@@ -18,7 +18,7 @@ const Welcome: React.FC = () => {
 
   const { data: comboOffers } = useQuery({
     queryKey: ["comboOffers"],
-    queryFn: () => getComboOffers(),
+    queryFn: () => getOffers(),
   });
 
   return (

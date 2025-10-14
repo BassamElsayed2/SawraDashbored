@@ -2,14 +2,15 @@
 
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema } from "@/components/Social/SettingsForm/lib/validations/schema";
 import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import * as apiAuth from "../../../../../services/apiAuth";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 type SignUpData = z.infer<typeof signUpSchema>;
 
@@ -19,18 +20,45 @@ export default function SignUpForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
+    setError,
+    clearErrors,
   } = useForm<SignUpData>({
     resolver: zodResolver(signUpSchema),
   });
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+  const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Watch password for strength indicator
+  const password = watch("password", "");
 
   const handleProfilePictureChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (e.target.files && e.target.files[0]) {
-      setProfilePicture(e.target.files[0]);
+      const file = e.target.files[0];
+
+      // التحقق من نوع الملف
+      if (!file.type.startsWith("image/")) {
+        toast.error("يرجى اختيار ملف صورة صحيح (PNG, JPG, GIF, etc.)");
+        e.target.value = ""; // مسح الحقل
+        return;
+      }
+
+      // التحقق من حجم الملف (5MB كحد أقصى)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error("حجم الصورة يجب أن يكون أقل من 5MB");
+        e.target.value = ""; // مسح الحقل
+        return;
+      }
+
+      setProfilePicture(file);
     }
   };
 
@@ -38,66 +66,173 @@ export default function SignUpForm() {
     setProfilePicture(null);
   };
 
-  const supabase = createClientComponentClient();
+  // Check phone availability
+  const checkPhoneAvailability = async (phoneNumber: string) => {
+    // تحقق من صحة رقم الهاتف المصري
+    const phoneRegex = /^(\+?20)?[0-9]{10,11}$/;
+
+    if (
+      !phoneNumber ||
+      !phoneRegex.test(phoneNumber.replace(/[\s\-()]/g, ""))
+    ) {
+      setPhoneAvailable(null);
+      return;
+    }
+
+    try {
+      setIsCheckingPhone(true);
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+        }/temp-admin/check-phone?phone=${encodeURIComponent(phoneNumber)}`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to check phone availability");
+        setPhoneAvailable(null);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPhoneAvailable(!data.exists);
+        if (data.exists) {
+          setError("phone", {
+            type: "manual",
+            message: "رقم الهاتف مستخدم بالفعل",
+          });
+        } else {
+          clearErrors("phone");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking phone:", error);
+      setPhoneAvailable(null);
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  };
+
+  // Debounce phone check
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPhoneAvailable(null);
+
+    // Clear previous timeout
+    if (phoneCheckTimeout.current) {
+      clearTimeout(phoneCheckTimeout.current);
+    }
+
+    // Set new timeout
+    phoneCheckTimeout.current = setTimeout(() => {
+      checkPhoneAvailability(value);
+    }, 800);
+  };
+
+  const phoneCheckTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
   const submit = async (data: SignUpData) => {
+    if (isSubmitting) return;
+
+    // Check if phone is available
+    if (phoneAvailable === false) {
+      toast.error("رقم الهاتف مستخدم بالفعل. يرجى استخدام رقم آخر.");
+      return;
+    }
+
     try {
-      // 1. تسجيل المستخدم
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-        });
+      setIsSubmitting(true);
 
-      if (signUpError) throw new Error(signUpError.message);
-
-      const userId = signUpData.user?.id;
-      if (!userId) throw new Error("فشل في الحصول على معرف المستخدم.");
-
-      // 2. رفع الصورة إن وجدت
       let imageUrl = "";
+
+      // رفع الصورة إن وجدت
       if (profilePicture) {
-        const fileExt = profilePicture.name.split(".").pop();
-        const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        try {
+          toast.loading("جاري رفع الصورة...", { id: "upload" });
 
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(filePath, profilePicture);
+          const formData = new FormData();
+          formData.append("image", profilePicture);
 
-        if (uploadError) throw new Error(uploadError.message);
+          const uploadResponse = await fetch(
+            `${
+              process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+            }/upload/image`,
+            {
+              method: "POST",
+              body: formData,
+              credentials: "include",
+            }
+          );
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("avatars").getPublicUrl(filePath);
+          if (!uploadResponse.ok) {
+            throw new Error("فشل في رفع الصورة");
+          }
 
-        imageUrl = publicUrl;
+          const uploadData = await uploadResponse.json();
+          imageUrl = uploadData.data.url;
+          toast.success("تم رفع الصورة بنجاح", { id: "upload" });
+        } catch (error) {
+          console.error("Image upload failed:", error);
+          toast.error("فشل في رفع الصورة", { id: "upload" });
+          // Continue without image
+        }
       }
 
-      // 3. حفظ البيانات في جدول admin_profiles
-      const { error: profileError } = await supabase
-        .from("admin_profiles")
-        .insert({
-          user_id: userId,
-          full_name: data.full_name ?? "",
-          email: data.email,
-          phone: data.phone,
-          job_title: data.job_title ?? "",
-          address: data.address ?? "",
-          about: data.about ?? "",
-          image_url: imageUrl,
-        });
+      // إنشاء المستخدم - دور admin افتراضي
+      const response = await apiAuth.createAdminUser({
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name || "",
+        phone: data.phone,
+        role: "admin", // جميع المستخدمين المضافين من لوحة التحكم هم admins
+        job_title: data.job_title || "",
+        address: data.address || "",
+        about: data.about || "",
+        image_url: imageUrl,
+      });
 
-      if (profileError) throw new Error(profileError.message);
-
-      toast.success("تم إنشاء الحساب بنجاح");
-      router.push("/dashboard");
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(`فشل التسجيل: ${error.message}`);
+      if (response.success) {
+        toast.success("تم إنشاء حساب المدير بنجاح");
+        router.push("/dashboard");
       } else {
-        toast.error("فشل التسجيل: حدث خطأ غير متوقع");
+        throw new Error(response.message || "فشل في إنشاء الحساب");
       }
+    } catch (error: unknown) {
+      console.error("Error creating admin user:", error);
+
+      // تصفية الرسائل الحساسة لتجنب تسريب المعلومات
+      const errorMessage =
+        (error as { data?: { message?: string }; message?: string })?.data
+          ?.message ||
+        (error as { message?: string })?.message ||
+        "حدث خطأ غير متوقع";
+
+      // قائمة الكلمات الحساسة التي لا يجب عرضها
+      const sensitiveWords = [
+        "password",
+        "token",
+        "secret",
+        "hash",
+        "jwt",
+        "sql",
+        "database",
+      ];
+      const hasSensitiveInfo = sensitiveWords.some((word) =>
+        errorMessage.toLowerCase().includes(word)
+      );
+
+      // استخدام رسالة عامة إذا كانت تحتوي على معلومات حساسة
+      const safeErrorMessage = hasSensitiveInfo
+        ? "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى."
+        : errorMessage;
+
+      toast.error(`فشل التسجيل: ${safeErrorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -136,16 +271,30 @@ export default function SignUpForm() {
                     <label className="mb-[10px] block font-medium text-black dark:text-white">
                       كلمة المرور *
                     </label>
-                    <input
-                      type="password"
-                      {...register("password")}
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        {...register("password")}
+                        className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] pr-[50px] block w-full outline-0 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute left-4 rtl:right-4 rtl:left-auto top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        {showPassword ? (
+                          <i className="ri-eye-off-line text-xl"></i>
+                        ) : (
+                          <i className="ri-eye-line text-xl"></i>
+                        )}
+                      </button>
+                    </div>
                     {errors.password && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.password.message}
                       </p>
                     )}
+                    <PasswordStrengthIndicator password={password} />
                   </div>
 
                   {/* Phone */}
@@ -153,14 +302,70 @@ export default function SignUpForm() {
                     <label className="mb-[10px] block font-medium text-black dark:text-white">
                       رقم الهاتف *
                     </label>
-                    <input
-                      type="text"
-                      {...register("phone")}
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        {...register("phone", {
+                          onChange: handlePhoneChange,
+                        })}
+                        className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] pr-[50px] block w-full outline-0 transition-all"
+                        placeholder="01234567890"
+                        dir="ltr"
+                      />
+                      {isCheckingPhone && (
+                        <div className="absolute left-4 rtl:right-4 rtl:left-auto top-1/2 -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
+                        </div>
+                      )}
+                      {!isCheckingPhone && phoneAvailable !== null && (
+                        <div className="absolute left-4 rtl:right-4 rtl:left-auto top-1/2 -translate-y-1/2">
+                          {phoneAvailable ? (
+                            <svg
+                              className="w-5 h-5 text-green-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-5 h-5 text-red-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {errors.phone && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.phone.message}
+                      </p>
+                    )}
+                    {!errors.phone && phoneAvailable && (
+                      <p className="text-green-600 dark:text-green-400 text-sm mt-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        رقم الهاتف متاح
                       </p>
                     )}
                   </div>
@@ -265,9 +470,10 @@ export default function SignUpForm() {
                 <div className="mt-[20px] sm:mt-[25px]">
                   <button
                     type="submit"
-                    className="font-medium inline-block transition-all rounded-md 2xl:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400"
+                    disabled={isSubmitting}
+                    className="font-medium inline-block transition-all rounded-md 2xl:text-md py-[10px] md:py-[12px] px-[20px] md:px-[22px] bg-primary-500 text-white hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    إنشاء حساب
+                    {isSubmitting ? "جاري الإنشاء..." : "إنشاء حساب"}
                   </button>
                 </div>
               </div>

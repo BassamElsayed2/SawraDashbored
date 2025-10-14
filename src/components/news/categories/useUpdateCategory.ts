@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import toast from "react-hot-toast";
-import supabase from "../../../../services/supabase";
+import {
+  updateCategory as updateCategoryApi,
+  uploadCategoryImage,
+} from "../../../../services/apiCategories";
 
 interface UpdateCategoryPayload {
   id: string;
@@ -23,27 +25,10 @@ export function useUpdateCategory() {
       let image_url = undefined;
 
       if (image) {
-        const fileExt = image.name.split(".").pop();
-        const fileName = `${id}-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("cat-img")
-          .upload(fileName, image);
-
-        if (uploadError) throw new Error(uploadError.message);
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("cat-img").getPublicUrl(fileName);
-
-        image_url = publicUrl;
+        image_url = await uploadCategoryImage(image, "categories");
       }
 
-      const { error } = await supabase
-        .from("categories")
-        .update({ name_ar, name_en, image_url })
-        .eq("id", id);
-
-      if (error) throw new Error(error.message);
+      await updateCategoryApi(id, { name_ar, name_en, image_url });
     },
     onSuccess: () => {
       toast.success("تم تحديث التصنيف بنجاح");

@@ -5,14 +5,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
-import { useLogout } from "@/components/Authentication/useLogout";
+import { useAuth } from "@/providers/AuthProvider";
 
 const ProfileMenu: React.FC = () => {
   const pathname = usePathname();
 
-  const { logout, isLoggingOut } = useLogout();
+  const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { data: profile } = useAdminProfile();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const [active, setActive] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null); // Ref for the dropdown container
@@ -120,14 +132,14 @@ const ProfileMenu: React.FC = () => {
             </li>
             <li>
               <button
-                onClick={() => logout()}
+                onClick={handleLogout}
                 disabled={isLoggingOut}
-                className={`block relative py-[7px] ltr:pl-[50px] ltr:pr-[20px] rtl:pr-[50px] rtl:pl-[20px] text-black dark:text-white transition-all hover:text-primary-500 `}
+                className={`block relative py-[7px] ltr:pl-[50px] ltr:pr-[20px] rtl:pr-[50px] rtl:pl-[20px] text-black dark:text-white transition-all hover:text-primary-500 disabled:opacity-50 disabled:cursor-not-allowed w-full text-right`}
               >
                 <i className="material-symbols-outlined top-1/2 -translate-y-1/2 !text-[22px] absolute ltr:left-[20px] rtl:right-[20px]">
                   logout
                 </i>
-                تسجيل الخروج
+                {isLoggingOut ? "جاري تسجيل الخروج..." : "تسجيل الخروج"}
               </button>
             </li>
           </ul>

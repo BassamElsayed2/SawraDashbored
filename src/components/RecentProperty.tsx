@@ -5,12 +5,12 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
 
-import { getComboOffers } from "../../services/apiComboOffers";
+import { getOffers } from "../../services/apiComboOffers";
 
 const RecentProperty: React.FC = () => {
   const { data: comboOffers } = useQuery({
     queryKey: ["comboOffers"],
-    queryFn: () => getComboOffers(),
+    queryFn: () => getOffers(),
   });
 
   if (comboOffers?.length === 0) return <div>لا يوجد عروض</div>;

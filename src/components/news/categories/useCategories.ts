@@ -4,6 +4,6 @@ import { getCategories } from "../../../../services/apiCategories";
 export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
-    queryFn: getCategories,
+    queryFn: () => getCategories(),
   });
 }

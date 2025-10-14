@@ -19,13 +19,6 @@ const ProfileInformation: React.FC<ProfileIntroProps> = ({ profile }) => {
         <div className="trezo-card-content">
           <ul>
             <li className="mb-[12.5px] last:mb-0">
-              رقم المستخدم الخاص:
-              <span className="text-black dark:text-white font-medium">
-                {"  "}
-                {profile?.user_id}
-              </span>
-            </li>
-            <li className="mb-[12.5px] last:mb-0">
               الاسم الكامل:
               <span className="text-black dark:text-white font-medium">
                 {"  "}
@@ -39,18 +32,26 @@ const ProfileInformation: React.FC<ProfileIntroProps> = ({ profile }) => {
                 {profile?.email}
               </span>
             </li>
-            <li className="mb-[12.5px] last:mb-0">
-              الدور:
-              <span className="text-black dark:text-white font-medium">
-                {"  "}
-                {profile?.job_title}
-              </span>
-            </li>
+
             <li className="mb-[12.5px] last:mb-0">
               الموقع:
               <span className="text-black dark:text-white font-medium">
                 {"  "}
-                {profile?.address}
+                {profile?.address || "-"}
+              </span>
+            </li>
+            <li className="mb-[12.5px] last:mb-0">
+              الوظيفة:
+              <span className="text-black dark:text-white font-medium">
+                {"  "}
+                {profile?.job_title || "-"}
+              </span>
+            </li>
+            <li className="mb-[12.5px] last:mb-0">
+              عنك:
+              <span className="text-black dark:text-white font-medium">
+                {"  "}
+                {profile?.about || "-"}
               </span>
             </li>
             <li className="mb-[12.5px] last:mb-0">

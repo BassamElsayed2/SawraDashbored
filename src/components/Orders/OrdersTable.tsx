@@ -36,6 +36,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         label: "قيد التوصيل",
         color: "bg-indigo-100 text-indigo-800",
       },
+      out_for_delivery: {
+        label: "قيد التوصيل",
+        color: "bg-indigo-100 text-indigo-800",
+      },
       delivered: { label: "تم التوصيل", color: "bg-green-100 text-green-800" },
       cancelled: { label: "ملغى", color: "bg-red-100 text-red-800" },
     };
@@ -50,14 +54,18 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     );
   };
 
-  const getDeliveryTypeBadge = (type: "delivery" | "pickup") => {
+  const getDeliveryTypeBadge = (type: Order["order_type"]) => {
     return type === "delivery" ? (
       <span className="px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
         توصيل
       </span>
-    ) : (
+    ) : type === "takeaway" ? (
       <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
         استلام
+      </span>
+    ) : (
+      <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+        تناول بالمكان
       </span>
     );
   };
@@ -159,20 +167,23 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    #{order.id.slice(0, 8)}
+                    #{order.id?.slice(0, 8) || "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {formatDate(order.created_at)}
+                    {order.created_at ? formatDate(order.created_at) : "-"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {getDeliveryTypeBadge(order.delivery_type)}
+                  {getDeliveryTypeBadge(order.order_type)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-white">
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                    {order.items?.reduce(
+                      (sum, item) => sum + item.quantity,
+                      0
+                    ) || 0}{" "}
                     منتج
                   </div>
                 </td>
@@ -188,12 +199,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                   <select
                     value={order.status}
                     onChange={(e) =>
+                      order.id &&
                       handleStatusChange(
                         order.id,
                         e.target.value as Order["status"]
                       )
                     }
-                    disabled={updatingOrderId === order.id}
+                    disabled={updatingOrderId === order.id || !order.id}
                     className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                   >
                     <option value="pending">قيد الانتظار</option>
@@ -207,7 +219,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Link
-                    href={`/dashboard/orders/${order.id}`}
+                    href={`/dashboard/orders/${order.id || ""}`}
                     className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                   >
                     عرض التفاصيل

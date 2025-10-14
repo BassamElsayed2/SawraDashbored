@@ -34,14 +34,14 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { UUID } from "crypto";
 
-import { getCurrentUser } from "../../../../../../services/apiauth";
+import { checkAuth } from "../../../../../../services/apiAuth";
 import Image from "next/image";
 import Link from "next/link";
 import {
   compressImage,
   needsCompression,
   formatFileSize,
-} from "../../../../../../src/lib/image-compression";
+} from "../../../../../lib/image-compression";
 
 type ProductFormValues = {
   title_ar: string;
@@ -85,7 +85,7 @@ const CreateProductForm: React.FC = () => {
 
   useEffect(() => {
     async function fetchUser() {
-      const user = await getCurrentUser();
+      const user = await checkAuth();
       if (user?.id) {
         setUserId(user.id as UUID);
         setValue("user_id", user.id as UUID);
@@ -179,7 +179,6 @@ const CreateProductForm: React.FC = () => {
 
   const addType = () => {
     const newType: ProductType = {
-      product_id: "", // Will be set when product is created
       name_ar: "",
       name_en: "",
     };
@@ -207,10 +206,9 @@ const CreateProductForm: React.FC = () => {
 
   const addSize = (typeIndex: number) => {
     const newSize: ProductSize = {
-      type_id: "", // Will be set when type is created
       size_ar: "",
       size_en: "",
-      price: 0,
+      price: 0.01, // Minimum positive price to pass validation
       offer_price: undefined,
     };
 
@@ -278,6 +276,33 @@ const CreateProductForm: React.FC = () => {
         );
         return;
       }
+
+      // التحقق من صحة بيانات كل حجم
+      for (let j = 0; j < typeSizes.length; j++) {
+        const size = typeSizes[j];
+        if (!size.size_ar || size.size_ar.trim() === "") {
+          toast.error(`يجب إدخال اسم الحجم بالعربية للنوع ${types[i].name_ar}`);
+          return;
+        }
+        if (!size.size_en || size.size_en.trim() === "") {
+          toast.error(
+            `يجب إدخال اسم الحجم بالإنجليزية للنوع ${types[i].name_ar}`
+          );
+          return;
+        }
+        if (!size.price || size.price <= 0) {
+          toast.error(`يجب إدخال سعر صحيح (أكبر من صفر) للحجم ${size.size_ar}`);
+          return;
+        }
+        if (
+          size.offer_price !== undefined &&
+          size.offer_price !== null &&
+          size.offer_price <= 0
+        ) {
+          toast.error(`سعر العرض يجب أن يكون أكبر من صفر أو فارغاً`);
+          return;
+        }
+      }
     }
 
     try {
@@ -287,10 +312,21 @@ const CreateProductForm: React.FC = () => {
       const uploadedImageUrl = await uploadProductImage(selectedImage);
 
       // تحضير البيانات مع الأحجام
-      const typesWithSizes = types.map((type, typeIndex) => ({
-        ...type,
-        sizes: sizesByType[typeIndex] || [],
-      }));
+      // إزالة الحقول غير المطلوبة عند الإنشاء (product_id, type_id, id)
+      const typesWithSizes = types.map((type, typeIndex) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, product_id, ...typeData } = type;
+        const cleanSizes = (sizesByType[typeIndex] || []).map((size) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id: sizeId, type_id, ...sizeData } = size;
+          return sizeData;
+        });
+
+        return {
+          ...typeData,
+          sizes: cleanSizes,
+        };
+      });
 
       const finalData: ProductWithTypes = {
         title_ar: data.title_ar,
@@ -298,7 +334,6 @@ const CreateProductForm: React.FC = () => {
         description_ar: data.description_ar,
         description_en: data.description_en,
         category_id: data.category_id,
-        user_id: userId,
         image_url: uploadedImageUrl,
         types: typesWithSizes,
       };
@@ -408,14 +443,17 @@ const CreateProductForm: React.FC = () => {
                       onChange={handleCategoryChange}
                     >
                       <option value="">اختر التصنيف</option>
-                      {categories?.map((category) => (
-                        <option
-                          key={category.id}
-                          value={category.id.toString()}
-                        >
-                          {category.name_ar}
-                        </option>
-                      ))}
+                      {Array.isArray(categories) &&
+                        categories
+                          .filter((category) => category.id)
+                          .map((category) => (
+                            <option
+                              key={category.id}
+                              value={category.id!.toString()}
+                            >
+                              {category.name_ar}
+                            </option>
+                          ))}
                     </select>
                   </div>
 

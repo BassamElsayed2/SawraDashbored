@@ -9,18 +9,25 @@ import toast from "react-hot-toast";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<{
+    total_orders: number;
+    pending_orders: number;
+    confirmed_orders: number;
+    preparing_orders: number;
+    ready_orders: number;
+    delivering_orders: number;
+    delivered_orders: number;
+    cancelled_orders: number;
+    total_revenue: number;
+    average_order_value: number;
+    delivery_orders: number;
+    pickup_orders: number;
+  } | null>(null);
   const [filters, setFilters] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [branches, setBranches] = useState<
-    Array<{ id: string; name_ar: string }>
+    Array<{ id?: string; name_ar: string }>
   >([]);
-
-  useEffect(() => {
-    fetchOrders();
-    fetchStats();
-    fetchBranches();
-  }, [filters]);
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -42,7 +49,7 @@ export default function OrdersPage() {
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await ordersApi.getOrderStatistics(filters);
+      const { data, error } = await ordersApi.getOrderStats(filters);
       if (error) {
         console.error("Error fetching stats:", error);
       } else {
@@ -57,14 +64,21 @@ export default function OrdersPage() {
     try {
       // Import the branches API dynamically
       const { getBranches } = await import("@/services/apiBranches");
-      const { data, error } = await getBranches();
-      if (!error && data) {
+      const data = await getBranches();
+      if (data) {
         setBranches(data);
       }
     } catch (error) {
       console.error("Error fetching branches:", error);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+    fetchStats();
+    fetchBranches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const handleStatusChange = async (
     orderId: string,
@@ -86,7 +100,7 @@ export default function OrdersPage() {
     }
   };
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
   };
 

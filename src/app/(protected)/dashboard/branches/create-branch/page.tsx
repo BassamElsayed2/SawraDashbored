@@ -3,25 +3,32 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import supabase from "../../../../../../services/supabase";
+import { createBranch } from "../../../../../../services/apiBranchQR";
+import { uploadBranchImage } from "../../../../../../services/apiUpload";
 import toast from "react-hot-toast";
 import {
   compressImage,
   needsCompression,
   formatFileSize,
-} from "../../../../../../src/lib/image-compression";
+} from "../../../../../lib/image-compression";
+import dynamic from "next/dynamic";
+
+// Load GoogleMapPicker dynamically to avoid SSR issues
+const GoogleMapPicker = dynamic(
+  () => import("../../../../../components/GoogleMapPicker"),
+  { ssr: false }
+);
 
 type FormData = {
   name_ar: string;
   name_en: string;
-  area_ar: string;
-  area_en: string;
   address_ar: string;
   address_en: string;
-  works_hours: string;
   phone: string;
-  google_map: string;
-  image: string;
+  email?: string;
+  google_map?: string;
+  lat?: number;
+  lng?: number;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -39,6 +46,8 @@ export default function CreateBranch() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<FormData>();
 
   // Cleanup preview URL when component unmounts
@@ -124,31 +133,36 @@ export default function CreateBranch() {
     setLoading(true);
 
     try {
-      let imageUrl = null;
+      let imageUrl: string | undefined = undefined;
 
+      // Upload image first if selected
       if (selectedImage) {
-        const fileExt = selectedImage.name.split(".").pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: imageUploadError } = await supabase.storage
-          .from("branches")
-          .upload(fileName, selectedImage);
-
-        if (imageUploadError) {
-          throw new Error("فشل في رفع الصورة");
+        try {
+          toast("جاري رفع الصورة...", { icon: "📤" });
+          const uploadResponse = await uploadBranchImage(selectedImage);
+          imageUrl = uploadResponse.imageUrl;
+          toast.success("تم رفع الصورة بنجاح");
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("فشل في رفع الصورة، سيتم إنشاء الفرع بدون صورة");
+          // Continue without image
         }
-
-        imageUrl = supabase.storage.from("branches").getPublicUrl(fileName)
-          .data.publicUrl;
       }
 
-      const { error: insertError } = await supabase
-        .from("branches")
-        .insert([{ ...data, image: imageUrl }]);
+      // Create branch with all required fields
+      const branchData = {
+        name_ar: data.name_ar,
+        name_en: data.name_en,
+        address_ar: data.address_ar,
+        address_en: data.address_en,
+        phone: data.phone,
+        email: data.email || undefined,
+        lat: data.lat || 0,
+        lng: data.lng || 0,
+        image_url: imageUrl,
+      };
 
-      if (insertError) {
-        throw new Error("حدث خطأ أثناء حفظ البيانات");
-      }
+      await createBranch(branchData);
 
       reset();
       setSelectedImage(null);
@@ -159,7 +173,8 @@ export default function CreateBranch() {
       toast.success("تم إنشاء فرع بنجاح");
       router.push("/dashboard/branches");
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error("حدث خطأ أثناء حفظ البيانات");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -213,39 +228,52 @@ export default function CreateBranch() {
                 )}
               </div>
 
+              <div className="sm:col-span-2 mb-[20px]">
+                <label className="mb-[10px] block font-medium text-black dark:text-white">
+                  اختر موقع الفرع على الخريطة
+                </label>
+                <GoogleMapPicker
+                  onLocationSelect={(lat, lng) => {
+                    setValue("lat", lat);
+                    setValue("lng", lng);
+                    toast.success(
+                      `تم تحديد الموقع: ${lat.toFixed(4)}, ${lng.toFixed(4)}`
+                    );
+                  }}
+                  initialLat={watch("lat")}
+                  initialLng={watch("lng")}
+                />
+              </div>
+
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  اسم المنطقة (ar)
+                  خط العرض - Latitude (يمكن التعديل)
                 </label>
                 <input
-                  {...register("area_ar", {
-                    minLength: {
-                      value: 3,
-                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                    },
-                  })}
-                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                  type="number"
+                  step="any"
+                  {...register("lat", { valueAsNumber: true })}
+                  placeholder="24.7136"
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                 />
-                {errors.area_ar && (
-                  <p className="text-red-500 mt-1">{errors.area_ar.message}</p>
+                {errors.lat && (
+                  <p className="text-red-500 mt-1">{errors.lat.message}</p>
                 )}
               </div>
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  اسم المنطقة (en)
+                  خط الطول - Longitude (يمكن التعديل)
                 </label>
                 <input
-                  {...register("area_en", {
-                    minLength: {
-                      value: 3,
-                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                    },
-                  })}
-                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
+                  type="number"
+                  step="any"
+                  {...register("lng", { valueAsNumber: true })}
+                  placeholder="46.6753"
+                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                 />
-                {errors.area_en && (
-                  <p className="text-red-500 mt-1">{errors.area_en.message}</p>
+                {errors.lng && (
+                  <p className="text-red-500 mt-1">{errors.lng.message}</p>
                 )}
               </div>
 
@@ -290,59 +318,20 @@ export default function CreateBranch() {
 
               <div className="mb-[20px]">
                 <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  ساعات العمل
-                </label>
-                <input
-                  {...register("works_hours", {
-                    minLength: {
-                      value: 3,
-                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                    },
-                  })}
-                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                />
-                {errors.works_hours && (
-                  <p className="text-red-500 mt-1">
-                    {errors.works_hours.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-[20px]">
-                <label className="mb-[10px] block font-medium text-black dark:text-white">
                   رقم الهاتف
                 </label>
                 <input
                   {...register("phone", {
                     minLength: {
                       value: 3,
-                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
+                      message: "رقم الهاتف يجب أن يكون 3 أحرف على الأقل",
                     },
                   })}
+                  placeholder=""
                   className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
                 />
                 {errors.phone && (
                   <p className="text-red-500 mt-1">{errors.phone.message}</p>
-                )}
-              </div>
-
-              <div className="mb-[20px]">
-                <label className="mb-[10px] block font-medium text-black dark:text-white">
-                  الموقع الجغرافي (google map)
-                </label>
-                <input
-                  {...register("google_map", {
-                    minLength: {
-                      value: 3,
-                      message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                    },
-                  })}
-                  className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                />
-                {errors.google_map && (
-                  <p className="text-red-500 mt-1">
-                    {errors.google_map.message}
-                  </p>
                 )}
               </div>
 

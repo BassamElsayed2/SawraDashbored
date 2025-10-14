@@ -2,7 +2,7 @@
 // Following existing patterns from the codebase
 
 export interface Branch {
-  id: string;
+  id?: string;
   name_ar: string;
   name_en: string;
   address_ar?: string;
@@ -42,7 +42,7 @@ export interface CustomerFeedback {
 
   // Individual category ratings (all columns exist in the database)
   reception_rating?: number; // 1-4 scale
-  speed_service_rating?: number; // 1-4 scale
+  service_speed_rating?: number; // 1-4 scale (corrected field name)
   quality_rating?: number; // 1-4 scale
   cleanliness_rating?: number; // 1-4 scale
   catering_rating?: number; // 1-4 scale
@@ -130,14 +130,14 @@ export interface FeedbackAnalytics {
 // Survey categories matching the physical feedback card and database constraints
 export const surveyCategories = [
   { key: "reception", ar: "الاستقبال والترحيب", en: "Reception and Welcome" },
+  { key: "service_speed", ar: "سرعة الخدمة", en: "Service Speed" },
+  { key: "quality", ar: "جودة الطعام", en: "Food Quality" },
+  { key: "cleanliness", ar: "مستوي النظافه", en: "Cleanliness Level" },
   {
-    key: "order_delivery",
+    key: "catering",
     ar: "طريقة تقديم الطلب",
     en: "Order Delivery Method",
   },
-  { key: "service_speed", ar: "سرعة الخدمة", en: "Service Speed" },
-  { key: "food_quality", ar: "جودة الطعام", en: "Food Quality" },
-  { key: "cleanliness", ar: "مستوي النظافه", en: "Cleanliness Level" },
 ] as const;
 
 // Database column mapping for individual ratings

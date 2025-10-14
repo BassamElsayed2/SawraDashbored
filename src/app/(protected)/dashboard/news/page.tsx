@@ -61,7 +61,9 @@ const ProductListTable: React.FC = () => {
         // نبني خريطة id => category name
         const map: Record<string, string> = {};
         categories.forEach((cat) => {
-          map[cat.id.toString()] = cat.name_ar;
+          if (cat.id) {
+            map[cat.id.toString()] = cat.name_ar;
+          }
         });
         setCategoriesMap(map);
       } catch (err) {
