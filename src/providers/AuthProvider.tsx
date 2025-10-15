@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(userData);
       toast.success("تم تسجيل الدخول بنجاح");
-      router.push("/dashboard");
+      router.push("/dashboard/");
       router.refresh();
     } catch (error: unknown) {
       console.error("Sign in failed:", error);

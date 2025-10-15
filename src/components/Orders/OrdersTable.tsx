@@ -54,22 +54,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     );
   };
 
-  const getDeliveryTypeBadge = (type: Order["order_type"]) => {
-    return type === "delivery" ? (
-      <span className="px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-        توصيل
-      </span>
-    ) : type === "takeaway" ? (
-      <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-        استلام
-      </span>
-    ) : (
-      <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-        تناول بالمكان
-      </span>
-    );
-  };
-
   const handleStatusChange = async (
     orderId: string,
     newStatus: Order["status"]
@@ -83,12 +67,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("ar-SA", {
+    return new Intl.DateTimeFormat("ar-EG", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      calendar: "gregory",
     }).format(date);
   };
 
@@ -140,9 +125,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 التاريخ
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                النوع
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 عدد المنتجات
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -167,16 +149,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    #{order.id?.slice(0, 8) || "N/A"}
+                    {order.id?.slice(0, 8) || "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     {order.created_at ? formatDate(order.created_at) : "-"}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getDeliveryTypeBadge(order.order_type)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-white">

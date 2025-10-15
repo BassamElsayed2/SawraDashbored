@@ -83,7 +83,7 @@ export default function SignUpForm() {
       setIsCheckingPhone(true);
       const response = await fetch(
         `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+          process.env.NEXT_PUBLIC_API_URL
         }/temp-admin/check-phone?phone=${encodeURIComponent(phoneNumber)}`,
         {
           credentials: "include",
@@ -158,9 +158,7 @@ export default function SignUpForm() {
           formData.append("image", profilePicture);
 
           const uploadResponse = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-            }/upload/image`,
+            `${process.env.NEXT_PUBLIC_API_URL}/upload/image`,
             {
               method: "POST",
               body: formData,
@@ -197,7 +195,7 @@ export default function SignUpForm() {
 
       if (response.success) {
         toast.success("تم إنشاء حساب المدير بنجاح");
-        router.push("/dashboard");
+        router.push("/dashboard/");
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");
       }

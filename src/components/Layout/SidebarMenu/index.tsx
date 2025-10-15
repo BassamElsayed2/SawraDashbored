@@ -39,7 +39,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
       <div className="sidebar-area bg-white dark:bg-[#0c1427] fixed z-[7] top-0 h-screen transition-all rounded-r-md">
         <div className="logo bg-white dark:bg-[#0c1427] border-b border-gray-100 dark:border-[#172036] px-[25px] pt-[19px] pb-[15px] absolute z-[2] right-0 top-0 left-0">
           <Link
-            href="/dashboard"
+            href="/dashboard/"
             className="transition-none relative flex items-center outline-none"
           >
             <Image
@@ -326,6 +326,20 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                   </div>
                 </ul>
               </div>
+            </div>
+
+            <div className="accordion-item rounded-md text-black dark:text-white mb-[5px] whitespace-nowrap">
+              <Link
+                href="/dashboard/delivery-fees/"
+                className={`accordion-button flex items-center transition-all py-[9px] ltr:pl-[14px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] rounded-md font-medium w-full relative hover:bg-gray-50 text-left dark:hover:bg-[#15203c] ${
+                  pathname === "/dashboard/delivery-fees/" ? "active" : ""
+                }`}
+              >
+                <span className="material-symbols-outlined transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px">
+                  local_shipping
+                </span>
+                <span className="title leading-none">رسوم التوصيل</span>
+              </Link>
             </div>
 
             <span className="block relative font-medium uppercase text-gray-400 mb-[8px] text-xs [&:not(:first-child)]:mt-[22px]">

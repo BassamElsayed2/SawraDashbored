@@ -14,8 +14,6 @@ interface OrdersStatsProps {
     cancelled_orders: number;
     total_revenue: number;
     average_order_value: number;
-    delivery_orders: number;
-    pickup_orders: number;
   } | null;
   isLoading?: boolean;
 }
@@ -23,8 +21,8 @@ interface OrdersStatsProps {
 const OrdersStats: React.FC<OrdersStatsProps> = ({ stats, isLoading }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
             className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow animate-pulse"
@@ -56,7 +54,7 @@ const OrdersStats: React.FC<OrdersStatsProps> = ({ stats, isLoading }) => {
     },
     {
       title: "تم التوصيل",
-      value: stats.delivered_orders,
+      value: stats.delivered_orders || 0,
       icon: "check_circle",
       color: "bg-green-500",
       textColor: "text-green-500",
@@ -82,24 +80,10 @@ const OrdersStats: React.FC<OrdersStatsProps> = ({ stats, isLoading }) => {
       color: "bg-indigo-500",
       textColor: "text-indigo-500",
     },
-    {
-      title: "طلبات التوصيل",
-      value: stats.delivery_orders,
-      icon: "local_shipping",
-      color: "bg-cyan-500",
-      textColor: "text-cyan-500",
-    },
-    {
-      title: "طلبات الاستلام",
-      value: stats.pickup_orders,
-      icon: "storefront",
-      color: "bg-teal-500",
-      textColor: "text-teal-500",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       {statsCards.map((card, index) => (
         <div
           key={index}

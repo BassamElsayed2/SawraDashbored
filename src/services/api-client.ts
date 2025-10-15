@@ -1,7 +1,7 @@
 // API Client for Dashboard - Uses fetch with React Query
 // Replaces Supabase client
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface FetchOptions extends RequestInit {
   data?: unknown;
@@ -160,5 +160,5 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_URL);
+export const apiClient = new ApiClient(API_URL as string);
 export default apiClient;
