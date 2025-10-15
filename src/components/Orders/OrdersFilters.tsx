@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 interface OrdersFiltersProps {
   filters: {
     status?: string;
-    delivery_type?: string;
     branch_id?: string;
     from_date?: string;
     to_date?: string;
+    order_id?: string;
   };
   onFilterChange: (filters: Record<string, unknown>) => void;
   branches?: Array<{ id?: string; name_ar: string }>;
@@ -19,6 +19,21 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
   onFilterChange,
   branches = [],
 }) => {
+  const [searchTerm, setSearchTerm] = useState(filters.order_id || "");
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onFilterChange({
+        ...filters,
+        order_id: searchTerm || undefined,
+      });
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
   const handleFilterChange = (key: string, value: string) => {
     onFilterChange({
       ...filters,
@@ -27,6 +42,7 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
   };
 
   const handleReset = () => {
+    setSearchTerm("");
     onFilterChange({});
   };
 
@@ -39,12 +55,6 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
     { value: "delivering", label: "قيد التوصيل" },
     { value: "delivered", label: "تم التوصيل" },
     { value: "cancelled", label: "ملغى" },
-  ];
-
-  const deliveryTypeOptions = [
-    { value: "", label: "جميع الأنواع" },
-    { value: "delivery", label: "توصيل" },
-    { value: "pickup", label: "استلام" },
   ];
 
   return (
@@ -62,6 +72,20 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Search by Order ID */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            رقم الطلب
+          </label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="ابحث برقم الطلب..."
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          />
+        </div>
+
         {/* Status Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -73,26 +97,6 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Delivery Type Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            نوع الطلب
-          </label>
-          <select
-            value={filters.delivery_type || ""}
-            onChange={(e) =>
-              handleFilterChange("delivery_type", e.target.value)
-            }
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {deliveryTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

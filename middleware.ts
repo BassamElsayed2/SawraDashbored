@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Public routes that don't require authentication
 const publicRoutes = ["/"];
@@ -38,7 +38,7 @@ export async function middleware(req: NextRequest) {
           // If user has admin role, redirect to dashboard
           if (["admin", "super_admin", "manager"].includes(user.role || "")) {
             const url = req.nextUrl.clone();
-            url.pathname = "/dashboard";
+            url.pathname = "/dashboard/";
             return NextResponse.redirect(url);
           }
         }

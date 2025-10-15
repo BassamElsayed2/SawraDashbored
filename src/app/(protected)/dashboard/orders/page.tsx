@@ -20,8 +20,6 @@ export default function OrdersPage() {
     cancelled_orders: number;
     total_revenue: number;
     average_order_value: number;
-    delivery_orders: number;
-    pickup_orders: number;
   } | null>(null);
   const [filters, setFilters] = useState({});
   const [isLoading, setIsLoading] = useState(true);

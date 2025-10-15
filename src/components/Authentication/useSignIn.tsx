@@ -41,7 +41,7 @@ export function useSignIn() {
 
         // Use Next.js router for navigation
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push("/dashboard/");
           router.refresh(); // Refresh server components
         }, 500);
       } catch (error) {

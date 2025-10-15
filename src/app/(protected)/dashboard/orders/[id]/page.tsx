@@ -149,12 +149,13 @@ export default function OrderDetailsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("ar-SA", {
+    return new Intl.DateTimeFormat("ar-EG", {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      calendar: "gregory",
     }).format(date);
   };
 
@@ -370,20 +371,6 @@ export default function OrderDetailsPage() {
               معلومات الطلب
             </h2>
             <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  نوع الطلب
-                </p>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {order.delivery_type === "delivery" ||
-                  order.order_type === "delivery"
-                    ? "توصيل"
-                    : order.delivery_type === "pickup" ||
-                      order.order_type === "takeaway"
-                    ? "استلام"
-                    : "تناول بالمكان"}
-                </p>
-              </div>
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   طريقة الدفع

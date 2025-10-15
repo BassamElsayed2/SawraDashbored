@@ -57,6 +57,7 @@ export interface OrderFilters {
   start_date?: string;
   end_date?: string;
   search?: string;
+  order_id?: string;
   page?: number;
   limit?: number;
 }
