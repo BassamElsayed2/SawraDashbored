@@ -13,7 +13,20 @@ const RecentProperty: React.FC = () => {
     queryFn: () => getOffers(),
   });
 
-  if (comboOffers?.length === 0) return <div>لا يوجد عروض</div>;
+  if (!comboOffers || comboOffers?.length === 0) {
+    return (
+      <div className="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
+        <div className="trezo-card-header mb-[15px] flex items-center justify-between">
+          <div className="trezo-card-title">
+            <h5 className="!mb-0">العروض الأخيرة</h5>
+          </div>
+        </div>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          لا يوجد عروض حالياً
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

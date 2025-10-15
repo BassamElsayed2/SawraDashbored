@@ -28,7 +28,7 @@ const Welcome: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-[25px]">
             <div className="text-center ltr:md:text-left rtl:md:text-right ltr:lg:-mr-[55px] rtl:lg:-ml-[55px] 2xl:ltr:mr-0 2xl:rtl:ml-0 2xl:max-w-[330px]">
               <span className="inline-block md:text-md text-orange-100 py-[1px] px-[13px] mb-[12px] font-medium bg-[#212529]">
-                مرحبا بك, {profile?.full_name}!
+                مرحبا بك, {profile?.full_name || "Admin"}!
               </span>
 
               <h1 className="!-tracking-[0.5px] !leading-[1.2] !mb-0 !text-xl md:!text-2xl 2xl:!text-3xl !text-white">
@@ -42,7 +42,7 @@ const Welcome: React.FC = () => {
                   </i>
                   <span className="block text-white">المنتجات</span>
                   <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {products?.total}+
+                    {products?.total || 0}+
                   </h6>
                 </div>
 
@@ -52,7 +52,7 @@ const Welcome: React.FC = () => {
                   </i>
                   <span className="block text-white">العروض</span>
                   <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {comboOffers?.length}+
+                    {comboOffers?.length || 0}+
                   </h6>
                 </div>
               </div>

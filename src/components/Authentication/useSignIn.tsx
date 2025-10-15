@@ -4,10 +4,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signIn } from "@/services/apiAuth";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/providers/AuthProvider";
 
 export function useSignIn() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
 
   const {
     mutate: login,
@@ -36,14 +38,17 @@ export function useSignIn() {
         // ✅ المستخدم لديه صلاحيات Admin - متابعة تسجيل الدخول
         toast.success("تم تسجيل الدخول بنجاح");
 
+        // تحديث حالة المستخدم في AuthProvider
+        await refreshUser();
+
         // Invalidate auth queries to refresh user state
         queryClient.invalidateQueries({ queryKey: ["user"] });
 
-        // Use Next.js router for navigation
+        // الانتظار قليلاً للسماح للـ AuthProvider بتحديث الحالة
+        // ثم سيتم التحويل التلقائي عن طريق useEffect في page.tsx
         setTimeout(() => {
-          router.push("/dashboard/");
-          router.refresh(); // Refresh server components
-        }, 500);
+          router.refresh();
+        }, 100);
       } catch (error) {
         console.error("Error during sign in:", error);
         // تنظيف حالة React Query عند حدوث خطأ
