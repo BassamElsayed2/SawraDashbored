@@ -53,8 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(currentUser);
-    } catch (error) {
-      console.error("Auth check failed:", error);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -77,8 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // ثم تسجيل الخروج من الخلفية
         try {
           await apiAuth.signOut();
-        } catch (signOutError) {
-          console.error("Sign out error:", signOutError);
+        } catch {
+          // Sign out error
         }
 
         throw new Error("ليس لديك صلاحيات الوصول للوحة التحكم");
@@ -89,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push("/dashboard/");
       router.refresh();
     } catch (error: unknown) {
-      console.error("Sign in failed:", error);
       setUser(null);
       throw error;
     }
@@ -99,8 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiAuth.signOut();
       toast.success("تم تسجيل الخروج بنجاح");
-    } catch (error) {
-      console.error("Sign out error:", error);
+    } catch {
       toast.error("حدث خطأ أثناء تسجيل الخروج");
     } finally {
       setUser(null);

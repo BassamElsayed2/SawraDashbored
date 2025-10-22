@@ -26,22 +26,28 @@ export default function OrdersPage() {
   const [branches, setBranches] = useState<
     Array<{ id?: string; name_ar: string }>
   >([]);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  const fetchOrders = async () => {
-    setIsLoading(true);
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const { data, error } = await ordersApi.getAllOrders(filters);
       if (error) {
-        toast.error("حدث خطأ أثناء جلب الطلبات");
-        console.error(error);
+        if (!silent) toast.error("حدث خطأ أثناء جلب الطلبات");
       } else {
-        setOrders(data || []);
+        const newOrders = data || [];
+        // Check if there are new orders
+        if (orders.length > 0 && newOrders.length > orders.length) {
+          toast.success("📦 طلب جديد وارد!");
+        }
+        setOrders(newOrders);
+        setLastUpdate(new Date());
       }
-    } catch (error) {
-      toast.error("حدث خطأ غير متوقع");
-      console.error(error);
+    } catch {
+      if (!silent) toast.error("حدث خطأ غير متوقع");
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -49,12 +55,12 @@ export default function OrdersPage() {
     try {
       const { data, error } = await ordersApi.getOrderStats(filters);
       if (error) {
-        console.error("Error fetching stats:", error);
+        // Error fetching stats
       } else {
         setStats(data);
       }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
+    } catch {
+      // Error fetching stats
     }
   };
 
@@ -66,8 +72,8 @@ export default function OrdersPage() {
       if (data) {
         setBranches(data);
       }
-    } catch (error) {
-      console.error("Error fetching branches:", error);
+    } catch {
+      // Error fetching branches
     }
   };
 
@@ -78,6 +84,19 @@ export default function OrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  // Auto-refresh orders every 10 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      fetchOrders(true); // Silent refresh
+      fetchStats();
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, autoRefresh]);
+
   const handleStatusChange = async (
     orderId: string,
     newStatus: Order["status"]
@@ -86,15 +105,28 @@ export default function OrdersPage() {
       const { error } = await ordersApi.updateOrderStatus(orderId, newStatus);
       if (error) {
         toast.error("فشل تحديث حالة الطلب");
-        console.error(error);
       } else {
         toast.success("تم تحديث حالة الطلب بنجاح");
         fetchOrders();
         fetchStats();
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
+    }
+  };
+
+  const handleDelete = async (orderId: string) => {
+    try {
+      const { error } = await ordersApi.deleteOrder(orderId);
+      if (error) {
+        toast.error("فشل حذف الطلب");
+      } else {
+        toast.success("تم حذف الطلب بنجاح");
+        fetchOrders();
+        fetchStats();
+      }
+    } catch {
+      toast.error("حدث خطأ غير متوقع");
     }
   };
 
@@ -105,13 +137,35 @@ export default function OrdersPage() {
   return (
     <div className="p-6">
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          إدارة الطلبات
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          عرض وإدارة جميع طلبات العملاء
-        </p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            إدارة الطلبات
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            عرض وإدارة جميع طلبات العملاء
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              autoRefresh
+                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-400"
+              }`}
+            ></span>
+            {autoRefresh ? "التحديث التلقائي مفعل" : "التحديث التلقائي متوقف"}
+          </button>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            آخر تحديث: {lastUpdate.toLocaleTimeString("ar-EG")}
+          </span>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -129,6 +183,7 @@ export default function OrdersPage() {
         orders={orders}
         isLoading={isLoading}
         onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
       />
     </div>
   );

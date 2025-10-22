@@ -16,8 +16,8 @@ export async function middleware(req: NextRequest) {
   // Check if the current route is public (home page only)
   const isPublicRoute = publicRoutes.includes(normalizedPath);
 
-  // Get session cookie
-  const sessionCookie = req.cookies.get("food_cms_session");
+  // Get session cookie - dashboard uses its own cookie
+  const sessionCookie = req.cookies.get("dashboard_session");
 
   // If on home page and already logged in, redirect to dashboard
   if (isPublicRoute && sessionCookie) {
@@ -25,7 +25,7 @@ export async function middleware(req: NextRequest) {
       const response = await fetch(`${API_URL}/auth/me`, {
         method: "GET",
         headers: {
-          Cookie: `food_cms_session=${sessionCookie.value}`,
+          Cookie: `dashboard_session=${sessionCookie.value}`,
         },
       });
 
@@ -46,15 +46,14 @@ export async function middleware(req: NextRequest) {
         // مسح الكوكي إذا كانت الجلسة غير صالحة
         const url = req.nextUrl.clone();
         const redirectResponse = NextResponse.redirect(url);
-        redirectResponse.cookies.delete("food_cms_session");
+        redirectResponse.cookies.delete("dashboard_session");
         return redirectResponse;
       }
     } catch (error) {
-      console.error("Auth verification error:", error);
       // مسح الكوكي في حالة حدوث خطأ للأمان
       const url = req.nextUrl.clone();
       const redirectResponse = NextResponse.redirect(url);
-      redirectResponse.cookies.delete("food_cms_session");
+      redirectResponse.cookies.delete("dashboard_session");
       return redirectResponse;
     }
   }
@@ -72,7 +71,7 @@ export async function middleware(req: NextRequest) {
       const response = await fetch(`${API_URL}/auth/me`, {
         method: "GET",
         headers: {
-          Cookie: `food_cms_session=${sessionCookie.value}`,
+          Cookie: `dashboard_session=${sessionCookie.value}`,
         },
       });
 
@@ -83,7 +82,7 @@ export async function middleware(req: NextRequest) {
 
         const redirectResponse = NextResponse.redirect(url);
         // Clear invalid cookie
-        redirectResponse.cookies.delete("food_cms_session");
+        redirectResponse.cookies.delete("dashboard_session");
         return redirectResponse;
       }
 
@@ -102,11 +101,10 @@ export async function middleware(req: NextRequest) {
 
         const redirectResponse = NextResponse.redirect(url);
         // Clear cookie for non-admin users
-        redirectResponse.cookies.delete("food_cms_session");
+        redirectResponse.cookies.delete("dashboard_session");
         return redirectResponse;
       }
     } catch (error) {
-      console.error("Auth verification error:", error);
       // On error, redirect to home page for safety
       const url = req.nextUrl.clone();
       url.pathname = "/";

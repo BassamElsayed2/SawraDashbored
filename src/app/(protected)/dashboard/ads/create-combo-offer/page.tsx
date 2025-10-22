@@ -119,8 +119,7 @@ export default function CreateComboOffer() {
         setSelectedImage(file);
         setPreviewImage(URL.createObjectURL(file));
       }
-    } catch (error) {
-      console.error("خطأ في ضغط الصورة:", error);
+    } catch {
       toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
 
       // Cleanup previous preview URL
@@ -143,6 +142,11 @@ export default function CreateComboOffer() {
 
       const insertData = {
         ...data,
+        price: Number(data.price) || 0,
+        original_price:
+          data.original_price && !isNaN(data.original_price)
+            ? Number(data.original_price)
+            : undefined,
         image_url: imageUrl,
       };
 

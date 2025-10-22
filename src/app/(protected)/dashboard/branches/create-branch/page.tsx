@@ -115,8 +115,7 @@ export default function CreateBranch() {
         setSelectedImage(file);
         setPreviewImage(URL.createObjectURL(file));
       }
-    } catch (error) {
-      console.error("خطأ في ضغط الصورة:", error);
+    } catch {
       toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
 
       // Cleanup previous preview URL
@@ -142,8 +141,7 @@ export default function CreateBranch() {
           const uploadResponse = await uploadBranchImage(selectedImage);
           imageUrl = uploadResponse.imageUrl;
           toast.success("تم رفع الصورة بنجاح");
-        } catch (uploadError) {
-          console.error("Error uploading image:", uploadError);
+        } catch {
           toast.error("فشل في رفع الصورة، سيتم إنشاء الفرع بدون صورة");
           // Continue without image
         }
@@ -172,9 +170,8 @@ export default function CreateBranch() {
       setPreviewImage(null);
       toast.success("تم إنشاء فرع بنجاح");
       router.push("/dashboard/branches");
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ أثناء حفظ البيانات");
-      console.error(error);
     } finally {
       setLoading(false);
     }

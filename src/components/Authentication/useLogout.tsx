@@ -12,8 +12,8 @@ export function useLogout() {
       queryClient.removeQueries();
       router.replace("/");
     },
-    onError: (error) => {
-      console.error("Logout failed:", error);
+    onError: () => {
+      // Logout failed
     },
   });
 

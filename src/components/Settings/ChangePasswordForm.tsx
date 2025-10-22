@@ -107,7 +107,6 @@ const ChangePasswordForm: React.FC = () => {
         (err as { message?: string })?.message ||
         "حدث خطأ غير متوقع.";
       setMessage(errorMessage);
-      console.error("Error changing password:", err);
     }
 
     setLoading(false);

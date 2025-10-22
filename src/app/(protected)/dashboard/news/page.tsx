@@ -63,8 +63,8 @@ const ProductListTable: React.FC = () => {
           }
         });
         setCategoriesMap(map);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        // Error fetching categories
       }
     }
 
@@ -79,9 +79,8 @@ const ProductListTable: React.FC = () => {
       toast.success("تم حذف المنتج بنجاح");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (err) => {
+    onError: () => {
       toast.error("حدث خطأ أثناء حذف المنتج");
-      console.error(err);
     },
   });
 

@@ -19,8 +19,8 @@ const ProfileMenu: React.FC = () => {
     setIsLoggingOut(true);
     try {
       await signOut();
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
+      // Logout error
     } finally {
       setIsLoggingOut(false);
     }

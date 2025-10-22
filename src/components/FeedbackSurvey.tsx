@@ -176,8 +176,7 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
       setShowModal(true);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
-    } catch (error) {
-      console.error("❌ Error submitting feedback:", error);
+    } catch {
       alert("حدث خطأ أثناء الإرسال، حاول مرة أخرى");
     } finally {
       setLoading(false);

@@ -77,7 +77,6 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
         setLoadingLocation(false);
       },
       (error) => {
-        console.error("Error getting location:", error);
         let errorMessage = "فشل في الحصول على موقعك الحالي";
 
         switch (error.code) {
