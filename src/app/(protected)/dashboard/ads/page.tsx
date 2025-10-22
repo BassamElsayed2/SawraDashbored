@@ -75,50 +75,32 @@ const ComboOffersList: React.FC = () => {
     },
   });
 
-  const handleDeleteOffer = async (id: string) => {
-    // Show confirmation toast
-    const confirmed = await new Promise((resolve) => {
-      toast(
-        (t) => (
-          <div className="flex items-center gap-2">
-            <span>هل أنت متأكد من حذف هذا العرض؟</span>
-            <div className="flex gap-1">
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(true);
-                }}
-                className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-              >
-                نعم
-              </button>
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(false);
-                }}
-                className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-              >
-                لا
-              </button>
-            </div>
+  const handleDeleteOffer = (id: string) => {
+    toast(
+      (t) => (
+        <span>
+          هل أنت متأكد أنك تريد حذف هذا العرض؟
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => {
+                deleteMutation.mutate(id);
+                toast.dismiss(t.id);
+              }}
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+            >
+              نعم
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+            >
+              إلغاء
+            </button>
           </div>
-        ),
-        {
-          duration: 5000,
-          position: "top-center",
-        }
-      );
-    });
-
-    if (!confirmed) return;
-
-    try {
-      // Delete the combo offer record
-      await deleteMutation.mutateAsync(id);
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
+        </span>
+      ),
+      { duration: 6000 }
+    );
   };
 
   const handleEditClick = (offer: ComboOffer) => {
