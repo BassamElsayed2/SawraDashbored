@@ -118,7 +118,9 @@ export async function getQRCode(
 }
 
 export async function getAllQRCodes(): Promise<BranchQRCode[]> {
-  const response = await apiClient.get<{ qrCodes: BranchQRCode[] }>("/qrcode");
+  const response = await apiClient.get<{ qrCodes: BranchQRCode[] }>(
+    "/qrcode/all"
+  );
   // Backend returns { success: true, qrCodes: [...] } directly
   return (response as unknown as { qrCodes: BranchQRCode[] }).qrCodes || [];
 }
