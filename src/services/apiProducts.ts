@@ -126,28 +126,32 @@ export async function uploadProductImage(
 ): Promise<string> {
   try {
     const response = (await apiClient.uploadFile("/upload/image", file, {
+      bucket: "product-images",
       folder,
     })) as { data: { url?: string; imageUrl?: string } };
 
     // Return the image URL from the response
     return response.data.url || response.data.imageUrl || "";
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("خطأ أثناء رفع صورة المنتج:", errorMessage);
+  } catch {
     throw new Error("تعذر رفع صورة المنتج");
   }
 }
 
 export async function deleteProductImage(imageUrl: string): Promise<void> {
   try {
-    // Extract file path from URL if needed
-    const path = new URL(imageUrl).pathname;
-    await apiClient.deleteFile("/upload/image", path);
+    // Extract file path from Supabase URL
+    // Supabase URLs format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+    const url = new URL(imageUrl);
+    const pathSegments = url.pathname.split("/");
+    const bucketIndex =
+      pathSegments.findIndex((segment) => segment === "public") + 1;
+    const bucket = pathSegments[bucketIndex];
+    const path = pathSegments.slice(bucketIndex + 1).join("/");
+
+    await apiClient.delete("/upload/image", {
+      data: { bucket, path },
+    });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("فشل حذف صورة المنتج:", errorMessage);
     throw error;
   }
 }

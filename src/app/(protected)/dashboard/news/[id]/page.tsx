@@ -173,8 +173,7 @@ export default function EditProductPage() {
         // الصورة لا تحتاج ضغط
         setSelectedImage(file);
       }
-    } catch (error) {
-      console.error("خطأ في ضغط الصورة:", error);
+    } catch {
       toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
       setSelectedImage(file);
     }

@@ -20,8 +20,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
     setIsLoggingOut(true);
     try {
       await signOut();
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
+      // Logout error
     } finally {
       setIsLoggingOut(false);
     }
@@ -357,6 +357,20 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
                   account_circle
                 </i>
                 <span className="title leading-none">ملفي الشخصي</span>
+              </Link>
+            </div>
+
+            <div className="accordion-item rounded-md text-black dark:text-white mb-[5px] whitespace-nowrap">
+              <Link
+                href="/dashboard/users/"
+                className={`accordion-button flex items-center transition-all py-[9px] ltr:pl-[14px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] rounded-md font-medium w-full relative hover:bg-gray-50 text-left dark:hover:bg-[#15203c] ${
+                  pathname === "/dashboard/users/" ? "active" : ""
+                }`}
+              >
+                <i className="material-symbols-outlined transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] !text-[22px] leading-none relative -top-px">
+                  group
+                </i>
+                <span className="title leading-none">المستخدمين</span>
               </Link>
             </div>
 

@@ -139,8 +139,8 @@ export const FeedbackDashboard: React.FC = () => {
       if (selectedFeedback?.id === feedbackId) {
         handleModalClose();
       }
-    } catch (error) {
-      console.error("Error deleting feedback:", error);
+    } catch {
+      // Error deleting feedback
     }
   };
 

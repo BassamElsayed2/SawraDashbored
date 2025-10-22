@@ -41,7 +41,15 @@ export default function OrderDetailsPage() {
     address_notes?: string;
     latitude?: number;
     longitude?: number;
-    payment_method?: "cash" | "card" | "online";
+    payment_method?: "cash" | "card" | "online" | "easykash";
+    payment_callback_data?: {
+      PaymentMethod?: string;
+      ProductCode?: string;
+      ProductType?: string;
+      status?: string;
+      easykashRef?: string;
+      voucher?: string;
+    };
   };
 
   const [order, setOrder] = useState<ExtendedOrder | null>(null);
@@ -55,14 +63,12 @@ export default function OrderDetailsPage() {
       const { data, error } = await ordersApi.getOrderById(orderId);
       if (error) {
         toast.error("فشل تحميل تفاصيل الطلب");
-        console.error(error);
       } else {
         setOrder(data);
         setNotes(data?.notes || "");
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -81,14 +87,12 @@ export default function OrderDetailsPage() {
       const { error } = await ordersApi.updateOrderStatus(orderId, newStatus);
       if (error) {
         toast.error("فشل تحديث حالة الطلب");
-        console.error(error);
       } else {
         toast.success("تم تحديث حالة الطلب بنجاح");
         fetchOrderDetails();
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     } finally {
       setIsUpdating(false);
     }
@@ -100,14 +104,12 @@ export default function OrderDetailsPage() {
       const { error } = await ordersApi.updateOrderNotes(orderId, notes);
       if (error) {
         toast.error("فشل تحديث الملاحظات");
-        console.error(error);
       } else {
         toast.success("تم تحديث الملاحظات بنجاح");
         fetchOrderDetails();
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     } finally {
       setIsUpdating(false);
     }
@@ -119,7 +121,11 @@ export default function OrderDetailsPage() {
         label: "قيد الانتظار",
         color: "bg-yellow-100 text-yellow-800",
       },
-      confirmed: { label: "مؤكد", color: "bg-blue-100 text-blue-800" },
+      pending_payment: {
+        label: "بانتظار الدفع",
+        color: "bg-orange-100 text-orange-800",
+      },
+      confirmed: { label: "تم الدفع", color: "bg-blue-100 text-blue-800" },
       preparing: {
         label: "قيد التحضير",
         color: "bg-purple-100 text-purple-800",
@@ -341,10 +347,9 @@ export default function OrderDetailsPage() {
             </h2>
             <div className="space-y-2">
               {[
-                "pending",
+                "pending_payment",
                 "confirmed",
                 "preparing",
-                "ready",
                 "delivering",
                 "delivered",
                 "cancelled",
@@ -380,8 +385,29 @@ export default function OrderDetailsPage() {
                     ? "نقداً عند الاستلام"
                     : order.payment_method === "card"
                     ? "بطاقة"
+                    : (order.payment_method === "easykash" ||
+                        order.payment_method === "online") &&
+                      order.payment_callback_data?.PaymentMethod
+                    ? order.payment_callback_data.PaymentMethod
                     : order.payment_method || "نقداً"}
                 </p>
+                {order.payment_callback_data && (
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                    {order.payment_callback_data.ProductType && (
+                      <p>
+                        نوع المنتج: {order.payment_callback_data.ProductType}
+                      </p>
+                    )}
+                    {order.payment_callback_data.easykashRef && (
+                      <p>
+                        رقم المرجع: {order.payment_callback_data.easykashRef}
+                      </p>
+                    )}
+                    {order.payment_callback_data.status && (
+                      <p>حالة الدفع: {order.payment_callback_data.status}</p>
+                    )}
+                  </div>
+                )}
               </div>
               {order.customer_name && (
                 <div>

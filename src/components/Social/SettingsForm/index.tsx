@@ -85,8 +85,7 @@ const SettingsForm: React.FC = () => {
           // الصورة لا تحتاج ضغط
           setProfilePicture(file);
         }
-      } catch (error) {
-        console.error("خطأ في ضغط الصورة:", error);
+      } catch {
         toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
         setProfilePicture(file);
       }
@@ -100,11 +99,11 @@ const SettingsForm: React.FC = () => {
   const uploadImage = async (file: File) => {
     try {
       const response = (await apiClient.uploadFile("/upload/image", file, {
+        bucket: "avatars",
         folder: "profile-pictures",
       })) as { data: { url?: string; imageUrl?: string } };
       return response.data.url || response.data.imageUrl || "";
-    } catch (error) {
-      console.error("Error uploading image:", error);
+    } catch {
       throw new Error("فشل رفع الصورة");
     }
   };
@@ -139,10 +138,8 @@ const SettingsForm: React.FC = () => {
     } catch (error: unknown) {
       toast.dismiss();
       if (error instanceof Error) {
-        console.error("Update error:", error.message);
         toast.error(error.message || "حدث خطأ أثناء التحديث");
       } else {
-        console.error("Unknown error", error);
         toast.error("حدث خطأ غير متوقع");
       }
     }

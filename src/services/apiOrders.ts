@@ -29,6 +29,7 @@ export interface Order {
   order_type: "dine-in" | "takeaway" | "delivery";
   status:
     | "pending"
+    | "pending_payment"
     | "confirmed"
     | "preparing"
     | "ready"
@@ -36,8 +37,8 @@ export interface Order {
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
-  payment_method: "cash" | "card" | "online";
-  payment_status: "pending" | "paid" | "refunded";
+  payment_method: "cash" | "card" | "online" | "easykash";
+  payment_status: "pending" | "paid" | "refunded" | "not_required";
   subtotal?: number;
   tax?: number;
   delivery_fee?: number;
@@ -58,6 +59,7 @@ export interface OrderFilters {
   end_date?: string;
   search?: string;
   order_id?: string;
+  customer_name?: string;
   page?: number;
   limit?: number;
 }

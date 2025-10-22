@@ -46,11 +46,18 @@ const OrdersStats: React.FC<OrdersStatsProps> = ({ stats, isLoading }) => {
       textColor: "text-blue-500",
     },
     {
-      title: "قيد الانتظار",
-      value: stats.pending_orders,
-      icon: "pending",
-      color: "bg-yellow-500",
-      textColor: "text-yellow-500",
+      title: "تم الدفع",
+      value: stats.confirmed_orders || 0,
+      icon: "payments",
+      color: "bg-blue-600",
+      textColor: "text-blue-600",
+    },
+    {
+      title: "قيد التحضير",
+      value: stats.preparing_orders || 0,
+      icon: "restaurant",
+      color: "bg-purple-500",
+      textColor: "text-purple-500",
     },
     {
       title: "تم التوصيل",
@@ -69,16 +76,9 @@ const OrdersStats: React.FC<OrdersStatsProps> = ({ stats, isLoading }) => {
     {
       title: "إجمالي الإيرادات",
       value: `${stats.total_revenue.toFixed(2)} ج.م`,
-      icon: "payments",
-      color: "bg-purple-500",
-      textColor: "text-purple-500",
-    },
-    {
-      title: "متوسط قيمة الطلب",
-      value: `${stats.average_order_value.toFixed(2)} ج.م`,
       icon: "account_balance_wallet",
-      color: "bg-indigo-500",
-      textColor: "text-indigo-500",
+      color: "bg-emerald-500",
+      textColor: "text-emerald-500",
     },
   ];
 

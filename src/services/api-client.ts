@@ -41,15 +41,22 @@ class ApiClient {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+      // إضافة timeout للطلب (15 ثانية)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...config,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
 
       const responseData = await response.json();
 
       if (!response.ok) {
         // Log detailed validation errors if available
         if (responseData.errors && Array.isArray(responseData.errors)) {
-          console.error("Validation Errors:", responseData.errors);
-
           // Create a detailed error message with all validation errors
           const errorDetails = responseData.errors
             .map(
@@ -70,7 +77,9 @@ class ApiClient {
 
       return responseData;
     } catch (error) {
-      console.error(`API Error (${endpoint}):`, error);
+      if ((error as Error).name === "AbortError") {
+        throw new Error(`Request timeout: ${endpoint}`);
+      }
       throw error;
     }
   }
@@ -147,7 +156,6 @@ class ApiClient {
 
       return data;
     } catch (error) {
-      console.error(`Upload Error (${endpoint}):`, error);
       throw error;
     }
   }

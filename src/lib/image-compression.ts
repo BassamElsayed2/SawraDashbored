@@ -186,8 +186,7 @@ export async function compressImages(
     try {
       const result = await compressImage(file, options);
       results.push(result);
-    } catch (error) {
-      console.error(`فشل في ضغط الصورة ${file.name}:`, error);
+    } catch {
       // في حالة الفشل، نعيد الصورة الأصلية
       results.push({
         compressedFile: file,

@@ -91,7 +91,6 @@ export default function SignUpForm() {
       );
 
       if (!response.ok) {
-        console.error("Failed to check phone availability");
         setPhoneAvailable(null);
         return;
       }
@@ -109,8 +108,7 @@ export default function SignUpForm() {
           clearErrors("phone");
         }
       }
-    } catch (error) {
-      console.error("Error checking phone:", error);
+    } catch {
       setPhoneAvailable(null);
     } finally {
       setIsCheckingPhone(false);
@@ -156,6 +154,8 @@ export default function SignUpForm() {
 
           const formData = new FormData();
           formData.append("image", profilePicture);
+          formData.append("bucket", "avatars");
+          formData.append("folder", "profile-pictures");
 
           const uploadResponse = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/upload/image`,
@@ -173,8 +173,7 @@ export default function SignUpForm() {
           const uploadData = await uploadResponse.json();
           imageUrl = uploadData.data.url;
           toast.success("تم رفع الصورة بنجاح", { id: "upload" });
-        } catch (error) {
-          console.error("Image upload failed:", error);
+        } catch {
           toast.error("فشل في رفع الصورة", { id: "upload" });
           // Continue without image
         }
@@ -200,8 +199,6 @@ export default function SignUpForm() {
         throw new Error(response.message || "فشل في إنشاء الحساب");
       }
     } catch (error: unknown) {
-      console.error("Error creating admin user:", error);
-
       // تصفية الرسائل الحساسة لتجنب تسريب المعلومات
       const errorMessage =
         (error as { data?: { message?: string }; message?: string })?.data

@@ -69,6 +69,7 @@ export async function deleteOffer(id: string): Promise<void> {
 
 export async function uploadOfferImage(file: File): Promise<string> {
   const response = (await apiClient.uploadFile("/upload/image", file, {
+    bucket: "combooffersmedia",
     folder: "offers",
   })) as { data: { url?: string; imageUrl?: string } };
   return response.data.url || response.data.imageUrl || "";

@@ -125,8 +125,7 @@ export async function getFeedback(filters?: {
     };
 
     return transformedData;
-  } catch (error) {
-    console.error("Error fetching feedback:", error);
+  } catch {
     // Return empty result instead of throwing to prevent undefined
     return {
       feedback: [],
@@ -165,8 +164,7 @@ export async function getFeedbackAnalytics(filters?: {
 
     // Backend returns analytics directly
     return response as unknown as FeedbackAnalytics;
-  } catch (error) {
-    console.error("Error fetching feedback analytics:", error);
+  } catch {
     // Return empty analytics instead of throwing
     return {
       total_feedback: 0,
@@ -193,7 +191,6 @@ export async function submitFeedback(
     );
     return response.data;
   } catch (error) {
-    console.error("Error submitting feedback:", error);
     throw error;
   }
 }

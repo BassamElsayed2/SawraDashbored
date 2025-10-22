@@ -77,10 +77,7 @@ export async function uploadCategoryImage(
       folder,
     })) as { data: { url?: string; imageUrl?: string } };
     return response.data.url || response.data.imageUrl || "";
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("خطأ أثناء رفع صورة الفئة:", errorMessage);
+  } catch {
     throw new Error("تعذر رفع صورة الفئة");
   }
 }

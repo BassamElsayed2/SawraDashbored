@@ -24,13 +24,11 @@ export default function DeliveryFeesPage() {
       const { data, error } = await deliveryApi.getDeliveryFeeConfigs();
       if (error) {
         toast.error("فشل تحميل إعدادات رسوم التوصيل");
-        console.error(error);
       } else {
         setConfigs(data || []);
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +72,8 @@ export default function DeliveryFeesPage() {
           fetchConfigs();
         }
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     }
   };
 
@@ -101,9 +98,8 @@ export default function DeliveryFeesPage() {
         toast.success("تم حذف الإعداد بنجاح");
         fetchConfigs();
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     }
   };
 
@@ -118,9 +114,8 @@ export default function DeliveryFeesPage() {
         toast.success("تم تحديث الحالة بنجاح");
         fetchConfigs();
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
-      console.error(error);
     }
   };
 

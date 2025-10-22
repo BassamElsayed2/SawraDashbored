@@ -93,8 +93,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
         total_branches: branchesData.length,
         qr_generation_stats: { today: 0, this_week: 0, this_month: 0 },
       });
-    } catch (error) {
-      console.error("Error loading QR code data:", error);
+    } catch {
+      // Error loading QR code data
     } finally {
       setLoading(false);
     }
@@ -123,8 +123,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
         return updated;
       });
       setSelectedBranches([]);
-    } catch (error) {
-      console.error("Error bulk generating QR codes:", error);
+    } catch {
+      // Error bulk generating QR codes
     } finally {
       setLoading(false);
     }
@@ -142,8 +142,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
         a.download = `qr-code-${branchId}.${format}`;
         a.click();
       }
-    } catch (error) {
-      console.error("Error downloading QR code:", error);
+    } catch {
+      // Error downloading QR code
     }
   };
 
@@ -156,8 +156,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
       setQRCodes((prev) =>
         prev.map((qr) => (qr.branch_id === branchId ? newQRCode : qr))
       );
-    } catch (error) {
-      console.error("Error regenerating QR code:", error);
+    } catch {
+      // Error regenerating QR code
     } finally {
       setLoading(false);
     }
@@ -167,8 +167,8 @@ export const QRCodeManagement: React.FC<QRCodeManagementProps> = ({
     try {
       await apiBranchQR.deleteQRCode(branchId);
       setQRCodes((prev) => prev.filter((qr) => qr.branch_id !== branchId));
-    } catch (error) {
-      console.error("Error deleting QR code:", error);
+    } catch {
+      // Error deleting QR code
     }
   };
 

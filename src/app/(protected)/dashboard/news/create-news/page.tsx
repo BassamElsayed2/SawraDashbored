@@ -158,8 +158,7 @@ const CreateProductForm: React.FC = () => {
           setSelectedImage(file);
           setValue("image", file);
         }
-      } catch (error) {
-        console.error("خطأ في ضغط الصورة:", error);
+      } catch {
         toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
         setSelectedImage(file);
         setValue("image", file);
@@ -339,9 +338,8 @@ const CreateProductForm: React.FC = () => {
       };
 
       mutate(finalData);
-    } catch (error: Error | unknown) {
+    } catch {
       toast.error("حدث خطأ أثناء رفع الصورة");
-      console.error("Image upload error:", error);
     } finally {
       setIsUploadingImage(false);
     }

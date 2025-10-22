@@ -66,6 +66,7 @@ export async function deleteNews(id: string): Promise<void> {
 
 export async function uploadNewsImage(file: File): Promise<string> {
   const response = (await apiClient.uploadFile("/upload/image", file, {
+    bucket: "PRODUCT_IMAGES", // Using product-images bucket for news images
     folder: "news",
   })) as { data: { url?: string; imageUrl?: string } };
   return response.data.url || response.data.imageUrl || "";

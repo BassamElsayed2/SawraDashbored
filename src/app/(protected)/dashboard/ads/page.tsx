@@ -156,8 +156,11 @@ const ComboOffersList: React.FC = () => {
         title_en: data.title_en,
         description_ar: data.description_ar,
         description_en: data.description_en,
-        price: data.price,
-        original_price: data.original_price,
+        price: Number(data.price) || 0,
+        original_price:
+          data.original_price && !isNaN(data.original_price)
+            ? Number(data.original_price)
+            : undefined,
         image_url: imageUrl,
       };
 

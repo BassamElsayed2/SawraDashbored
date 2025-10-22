@@ -9,6 +9,7 @@ interface OrdersFiltersProps {
     from_date?: string;
     to_date?: string;
     order_id?: string;
+    customer_name?: string;
   };
   onFilterChange: (filters: Record<string, unknown>) => void;
   branches?: Array<{ id?: string; name_ar: string }>;
@@ -20,8 +21,11 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
   branches = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState(filters.order_id || "");
+  const [customerNameSearch, setCustomerNameSearch] = useState(
+    filters.customer_name || ""
+  );
 
-  // Debounce search
+  // Debounce order ID search
   useEffect(() => {
     const timer = setTimeout(() => {
       onFilterChange({
@@ -34,6 +38,19 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
+  // Debounce customer name search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onFilterChange({
+        ...filters,
+        customer_name: customerNameSearch || undefined,
+      });
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerNameSearch]);
+
   const handleFilterChange = (key: string, value: string) => {
     onFilterChange({
       ...filters,
@@ -43,12 +60,24 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
 
   const handleReset = () => {
     setSearchTerm("");
+    setCustomerNameSearch("");
     onFilterChange({});
+  };
+
+  const handleTogglePendingPayment = () => {
+    if (filters.status === "pending_payment") {
+      // إذا كان مفعل، قم بإلغاء التفعيل
+      handleFilterChange("status", "");
+    } else {
+      // إذا لم يكن مفعل، قم بتفعيله
+      handleFilterChange("status", "pending_payment");
+    }
   };
 
   const statusOptions = [
     { value: "", label: "جميع الحالات" },
     { value: "pending", label: "قيد الانتظار" },
+    { value: "pending_payment", label: "بانتظار الدفع" },
     { value: "confirmed", label: "مؤكد" },
     { value: "preparing", label: "قيد التحضير" },
     { value: "ready", label: "جاهز" },
@@ -63,12 +92,27 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           تصفية الطلبات
         </h3>
-        <button
-          onClick={handleReset}
-          className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          إعادة تعيين
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleTogglePendingPayment}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2 ${
+              filters.status === "pending_payment"
+                ? "bg-orange-600 text-white hover:bg-orange-700"
+                : "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50"
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">
+              pending_actions
+            </span>
+            بانتظار الدفع
+          </button>
+          <button
+            onClick={handleReset}
+            className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            إعادة تعيين
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -82,6 +126,20 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="ابحث برقم الطلب..."
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          />
+        </div>
+
+        {/* Search by Customer Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            اسم العميل
+          </label>
+          <input
+            type="text"
+            value={customerNameSearch}
+            onChange={(e) => setCustomerNameSearch(e.target.value)}
+            placeholder="ابحث باسم العميل..."
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>

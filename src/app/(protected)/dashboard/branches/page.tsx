@@ -108,8 +108,7 @@ const BranchesList: React.FC = () => {
         setBranchesList(data as Branch[]);
         // Fetch QR codes for all branches
         await fetchQRCodes(data as Branch[]);
-      } catch (error) {
-        console.error("Error fetching branches:", error);
+      } catch {
         toast.error("فشل في جلب الفروع");
       }
     };
@@ -131,8 +130,8 @@ const BranchesList: React.FC = () => {
       }
 
       setQrCodes(qrCodesMap);
-    } catch (error) {
-      console.error("Error fetching QR codes:", error);
+    } catch {
+      // Error fetching QR codes
     }
   };
 
@@ -150,8 +149,7 @@ const BranchesList: React.FC = () => {
       }));
 
       toast.success("تم إنشاء رمز QR بنجاح", { id: "generate-qr" });
-    } catch (error) {
-      console.error("Error generating QR code:", error);
+    } catch {
       toast.error("فشل في إنشاء رمز QR", { id: "generate-qr" });
     } finally {
       setGeneratingQR(null);
@@ -196,9 +194,8 @@ const BranchesList: React.FC = () => {
       toast.success(`تم حذف الفرع "${branchName}" بنجاح`, {
         id: "delete-branch",
       });
-    } catch (err) {
+    } catch {
       toast.error("فشل في حذف الفرع", { id: "delete-branch" });
-      console.error(err);
     }
   };
 
@@ -247,8 +244,7 @@ const BranchesList: React.FC = () => {
           const uploadResponse = await uploadBranchImage(selectedImage);
           imageUrl = uploadResponse.imageUrl;
           toast.success("تم رفع الصورة بنجاح");
-        } catch (uploadError) {
-          console.error("Error uploading image:", uploadError);
+        } catch {
           toast.error("فشل في رفع الصورة، سيتم التحديث بدون تغيير الصورة");
           // Continue without changing image
         }
@@ -271,9 +267,8 @@ const BranchesList: React.FC = () => {
       setSelectedImage(null);
       setPreviewImage(null);
       setSelectedBranch(null);
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ أثناء التحديث");
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -772,7 +767,7 @@ const BranchesList: React.FC = () => {
                         type="text"
                         value={
                           selectedQRCode.survey_url ||
-                          `http://localhost:3000/feedback-survey/${selectedQRCode.branch_id}`
+                          `https://cp.elsawra.net/feedback-survey/${selectedQRCode.branch_id}`
                         }
                         readOnly
                         className="flex-1 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-700 dark:text-gray-300"
@@ -781,7 +776,7 @@ const BranchesList: React.FC = () => {
                         onClick={() => {
                           const url =
                             selectedQRCode.survey_url ||
-                            `http://localhost:3000/feedback-survey/${selectedQRCode.branch_id}`;
+                            `https://cp.elsawra.net/feedback-survey/${selectedQRCode.branch_id}`;
                           navigator.clipboard.writeText(url);
                           toast.success("تم نسخ الرابط");
                         }}

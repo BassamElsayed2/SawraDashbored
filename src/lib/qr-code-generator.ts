@@ -97,8 +97,7 @@ export class QRCodeGenerator {
       });
 
       return qrCodeDataURL;
-    } catch (error) {
-      console.error("Error generating QR code data URL:", error);
+    } catch {
       throw new Error("Failed to generate QR code");
     }
   }
@@ -126,8 +125,7 @@ export class QRCodeGenerator {
       });
 
       return qrCodeSVG;
-    } catch (error) {
-      console.error("Error generating QR code SVG:", error);
+    } catch {
       throw new Error("Failed to generate QR code SVG");
     }
   }
@@ -150,8 +148,7 @@ export class QRCodeGenerator {
       });
 
       return qrCodeBuffer;
-    } catch (error) {
-      console.error("Error generating QR code buffer:", error);
+    } catch {
       throw new Error("Failed to generate QR code buffer");
     }
   }
@@ -235,8 +232,7 @@ export class QRCodeGenerator {
     try {
       const testQR = await this.generateQRCodeDataURL(testUrl);
       return testQR.startsWith("data:image/");
-    } catch (error) {
-      console.error("QR code generation test failed:", error);
+    } catch {
       return false;
     }
   }

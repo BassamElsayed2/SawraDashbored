@@ -49,15 +49,13 @@ export function useSignIn() {
         setTimeout(() => {
           router.refresh();
         }, 100);
-      } catch (error) {
-        console.error("Error during sign in:", error);
+      } catch {
         // تنظيف حالة React Query عند حدوث خطأ
         queryClient.clear();
         toast.error("حدث خطأ أثناء تسجيل الدخول");
       }
     },
     onError: (error: Error) => {
-      console.error("Login error:", error);
       // تنظيف حالة React Query عند فشل تسجيل الدخول
       queryClient.clear();
       toast.error(
