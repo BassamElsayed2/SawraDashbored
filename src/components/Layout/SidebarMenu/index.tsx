@@ -42,15 +42,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
             href="/dashboard/"
             className="transition-none relative flex items-center outline-none"
           >
-            <Image
-              src="/images/logo-icon.svg"
-              alt="logo-icon"
-              width={26}
-              height={26}
-            />
-            <span className="font-bold text-black dark:text-white relative ltr:ml-[8px] rtl:mr-[8px] top-px text-xl">
+              <Image
+                  src="/images/logo-icon.png"
+                  alt="logo-icon"
+                  width={150}
+                  height={150}
+                />
+         {/*    <span className="font-bold text-black dark:text-white relative ltr:ml-[8px] rtl:mr-[8px] top-px text-xl">
               ENS
-            </span>
+            </span> */}
           </Link>
 
           <button

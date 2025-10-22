@@ -123,8 +123,8 @@ export default function CategoriesPage() {
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-48 text-gray-500">
-        جاري التحميل...
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
       </div>
     );
   if (isError)
@@ -137,37 +137,37 @@ export default function CategoriesPage() {
   return (
     <>
       <div className="mb-[25px] md:flex items-center justify-between">
-        <h5 className="!mb-0">التصنيفات</h5>
+        <h3 className="!mb-0 text-lg font-semibold text-gray-800 dark:text-white">التصنيفات</h3>
 
         <ol className="breadcrumb mt-[12px] md:mt-0 rtl:flex-row-reverse">
           <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
             <Link
               href="/dashboard/"
-              className="inline-block relative ltr:pl-[22px] rtl:pr-[22px] transition-all hover:text-primary-500"
+              className="inline-block relative ltr:pl-[22px] rtl:pr-[22px] transition-all hover:text-primary-600 text-gray-600 dark:text-gray-300"
             >
               <i className="material-symbols-outlined absolute ltr:left-0 rtl:right-0 !text-lg -mt-px text-primary-500 top-1/2 -translate-y-1/2">
                 home
               </i>
-              رئيسية
+              الرئيسية
             </Link>
           </li>
-          <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+          <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0 text-gray-500 dark:text-gray-400">
             التصنيفات
           </li>
         </ol>
       </div>
-      <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
+      <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md border border-gray-100 dark:border-[#172036]">
         <div className="trezo-card-header mb-[20px] md:mb-[25px] sm:flex items-center justify-between">
           <div className="trezo-card-subtitle mt-[15px] sm:mt-0">
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-block transition-all rounded-md font-medium px-[13px] py-[6px] text-primary-500 border border-primary-500 hover:bg-primary-500 hover:text-white"
+              className="inline-block transition-all rounded-md font-medium px-[15px] py-[8px] text-sm text-white bg-primary-500 hover:bg-primary-600"
             >
-              <span className="inline-block relative ltr:pl-[22px] rtl:pr-[22px]">
-                <i className="material-symbols-outlined !text-[22px] absolute ltr:-left-[4px] rtl:-right-[4px] top-1/2 -translate-y-1/2">
+              <span className="inline-block relative ltr:pl-[20px] rtl:pr-[20px]">
+                <i className="material-symbols-outlined !text-[20px] absolute ltr:-left-[2px] rtl:-right-[2px] top-1/2 -translate-y-1/2">
                   add
                 </i>
-                إضافة تصنيف جديد
+                أضف تصنيف جديد
               </span>
             </button>
           </div>
@@ -176,12 +176,12 @@ export default function CategoriesPage() {
         <div className="trezo-card-content">
           <div className="table-responsive overflow-x-auto">
             <table className="w-full">
-              <thead className="text-black dark:text-white">
+              <thead className="text-gray-800 dark:text-white">
                 <tr>
                   {["التصنيف", "الاجرائات"].map((header) => (
                     <th
                       key={header}
-                      className="font-medium ltr:text-left rtl:text-right px-[20px] py-[11px] bg-gray-50 dark:bg-[#15203c] whitespace-nowrap ltr:first:rounded-tl-md ltr:last:rounded-tr-md rtl:first:rounded-tr-md rtl:last:rounded-tl-md"
+                      className="font-medium text-sm ltr:text-left rtl:text-right px-[20px] py-[12px] bg-gray-50 dark:bg-[#15203c] whitespace-nowrap ltr:first:rounded-tl-md ltr:last:rounded-tr-md rtl:first:rounded-tr-md rtl:last:rounded-tl-md"
                     >
                       {header}
                     </th>
@@ -189,40 +189,40 @@ export default function CategoriesPage() {
                 </tr>
               </thead>
 
-              <tbody className="text-black dark:text-white">
+              <tbody className="text-gray-700 dark:text-gray-200">
                 {!Array.isArray(categories) || categories.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="text-center py-8 text-gray-500">
+                    <td colSpan={2} className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
                       لا توجد تصنيفات متاحة
                     </td>
                   </tr>
                 ) : (
                   categories?.map((cat) => (
-                    <tr key={cat.id}>
+                    <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-[#15203c] transition-colors">
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
-                        <div className="flex items-center text-black dark:text-white transition-all hover:text-primary-500">
-                          <div className="relative w-[40px] h-[40px]">
+                        <div className="flex items-center text-gray-800 dark:text-white">
+                          <div className="relative w-[40px] h-[40px] rounded-md overflow-hidden">
                             {cat.image_url ? (
                               <Image
                                 src={cat.image_url}
                                 alt={cat.name_ar}
                                 width={40}
                                 height={40}
-                                className="w-full h-full object-cover rounded-md"
+                                className="rounded-md object-cover w-full h-full"
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-100 dark:bg-[#15203c] rounded-md flex items-center justify-center">
-                                <i className="material-symbols-outlined text-gray-400 dark:text-gray-500 text-xl">
+                                <i className="material-symbols-outlined text-gray-400 dark:text-gray-500 !text-[18px]">
                                   image
                                 </i>
                               </div>
                             )}
                           </div>
                           <div className="ltr:ml-[12px] rtl:mr-[12px]">
-                            <span className="block text-[15px] font-medium">
+                            <span className="block text-md font-medium">
                               {cat.name_ar}
                             </span>
-                            <span className="block text-[13px] text-gray-500 dark:text-gray-400">
+                            <span className="block text-xs text-gray-500 dark:text-gray-400">
                               {cat.name_en}
                             </span>
                           </div>
@@ -230,43 +230,25 @@ export default function CategoriesPage() {
                       </td>
 
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
-                        <div className="flex items-center gap-[9px]">
-                          <div className="relative group">
-                            <button
-                              onClick={() => openEditModal(cat)}
-                              className="text-gray-500 leading-none"
-                              type="button"
-                            >
-                              <i className="material-symbols-outlined !text-md">
-                                edit
-                              </i>
-                            </button>
+                        <div className="flex items-center gap-[8px]">
+                          <button
+                            onClick={() => openEditModal(cat)}
+                            className="text-gray-500 hover:text-primary-500 leading-none transition-colors"
+                            type="button"
+                          >
+                            <i className="material-symbols-outlined !text-[20px]">
+                              edit
+                            </i>
+                          </button>
 
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              تعديل
-                              {/* Arrow */}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-white dark:border-[#172036] border-t-gray-800 dark:border-t-gray-800"></div>
-                            </div>
-                          </div>
-
-                          <div className="relative group">
-                            <button
-                              onClick={() => openDeleteModal(cat)}
-                              className="text-danger-500 leading-none"
-                            >
-                              <i className="material-symbols-outlined !text-md">
-                                delete
-                              </i>
-                            </button>
-
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              مسح
-                              {/* Arrow */}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-white dark:border-[#172036] border-t-gray-800 dark:border-t-gray-800"></div>
-                            </div>
-                          </div>
+                          <button
+                            onClick={() => openDeleteModal(cat)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <i className="material-symbols-outlined !text-[20px] font-normal">
+                              delete
+                            </i>
+                          </button>
                         </div>
                       </td>
                     </tr>
