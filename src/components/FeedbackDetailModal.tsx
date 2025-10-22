@@ -92,46 +92,31 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
       setShowDeleteConfirm(true);
       toast(
         (t) => (
-          <div className="flex flex-col gap-3" dir="rtl">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">⚠️</span>
-              <p className="text-base font-bold text-gray-800">
-                هل أنت متأكد من حذف هذا التقييم؟
-              </p>
-            </div>
-            <div className="text-sm text-gray-600">
-              هذا الإجراء لا يمكن التراجع عنه
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  setShowDeleteConfirm(false);
-                }}
-                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold transition-colors"
-              >
-                إلغاء
-              </button>
+          <span>
+            هل أنت متأكد أنك تريد حذف هذا التقييم؟
+            <div className="mt-2 flex gap-2">
               <button
                 onClick={() => {
                   toast.dismiss(t.id);
                   handleDelete();
                 }}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+                className="bg-red-500 text-white px-3 py-1 rounded text-sm"
               >
-                حذف
+                نعم
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  setShowDeleteConfirm(false);
+                }}
+                className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+              >
+                إلغاء
               </button>
             </div>
-          </div>
+          </span>
         ),
-        {
-          duration: 10000,
-          position: "top-center",
-          style: {
-            minWidth: "400px",
-            padding: "20px",
-          },
-        }
+        { duration: 6000 }
       );
     }
   };
