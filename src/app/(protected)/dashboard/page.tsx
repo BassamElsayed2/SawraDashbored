@@ -104,15 +104,10 @@ export default function DashboardPage() {
 
       // استخدام Promise.all لجلب كل المنتجات في نفس الوقت (5 ثواني للكل بدلاً من 25!)
       const productFetches = productIds.map((productId) =>
-        fetch(
-          `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-          }/products/${productId}`,
-          {
-            credentials: "include",
-            signal: AbortSignal.timeout(5000),
-          }
-        )
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
+          credentials: "include",
+          signal: AbortSignal.timeout(5000),
+        })
           .then((response) => {
             if (response.ok) return response.json();
             return null;
