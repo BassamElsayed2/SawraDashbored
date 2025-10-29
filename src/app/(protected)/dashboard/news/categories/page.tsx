@@ -7,6 +7,9 @@ import { useUpdateCategory } from "@/components/news/categories/useUpdateCategor
 import { useDeleteCategory } from "@/components/news/categories/useDeleteCategory";
 import { useAddCategory } from "@/components/news/categories/useCreateCategory";
 import Link from "next/link";
+import { BranchSelector } from "@/components/BranchSelector";
+import { updateCategoryBranches } from "@/services/apiBranchProducts";
+import toast from "react-hot-toast";
 
 interface Category {
   id?: string;
@@ -33,6 +36,7 @@ export default function CategoriesPage() {
   const [newEn, setNewEn] = useState("");
   const [newImage, setNewImage] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string>("");
+  const [newBranches, setNewBranches] = useState<string[]>([]);
 
   const { updateCategory, isPending: isUpdating } = useUpdateCategory();
   const { deleteCategory, isPending: isDeleting } = useDeleteCategory();
@@ -100,8 +104,14 @@ export default function CategoriesPage() {
     });
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newAr.trim() || !newEn.trim()) return;
+
+    if (newBranches.length === 0) {
+      toast.error("يرجى اختيار فرع واحد على الأقل");
+      return;
+    }
+
     addCategory(
       {
         name_ar: newAr.trim(),
@@ -109,11 +119,22 @@ export default function CategoriesPage() {
         image: newImage || undefined,
       },
       {
-        onSuccess: () => {
+        onSuccess: async (category) => {
+          // Link category to branches
+          if (category?.id && newBranches.length > 0) {
+            try {
+              await updateCategoryBranches(category.id, newBranches);
+              toast.success("تم إضافة التصنيف وربطه بالفروع بنجاح");
+            } catch {
+              toast.error("تم إضافة التصنيف لكن فشل ربطه بالفروع");
+            }
+          }
+
           setNewAr("");
           setNewEn("");
           setNewImage(null);
           setNewImagePreview("");
+          setNewBranches([]);
           setIsAddModalOpen(false);
           refetch();
         },
@@ -137,7 +158,9 @@ export default function CategoriesPage() {
   return (
     <>
       <div className="mb-[25px] md:flex items-center justify-between">
-        <h3 className="!mb-0 text-lg font-semibold text-gray-800 dark:text-white">التصنيفات</h3>
+        <h3 className="!mb-0 text-lg font-semibold text-gray-800 dark:text-white">
+          التصنيفات
+        </h3>
 
         <ol className="breadcrumb mt-[12px] md:mt-0 rtl:flex-row-reverse">
           <li className="breadcrumb-item inline-block relative text-sm mx-[11px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
@@ -192,13 +215,19 @@ export default function CategoriesPage() {
               <tbody className="text-gray-700 dark:text-gray-200">
                 {!Array.isArray(categories) || categories.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                    <td
+                      colSpan={2}
+                      className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm"
+                    >
                       لا توجد تصنيفات متاحة
                     </td>
                   </tr>
                 ) : (
                   categories?.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-[#15203c] transition-colors">
+                    <tr
+                      key={cat.id}
+                      className="hover:bg-gray-50 dark:hover:bg-[#15203c] transition-colors"
+                    >
                       <td className="ltr:text-left rtl:text-right whitespace-nowrap px-[20px] py-[15px] border-b border-gray-100 dark:border-[#172036] ltr:first:border-l ltr:last:border-r rtl:first:border-r rtl:last:border-l">
                         <div className="flex items-center text-gray-800 dark:text-white">
                           <div className="relative w-[40px] h-[40px] rounded-md overflow-hidden">
@@ -408,6 +437,18 @@ export default function CategoriesPage() {
                 onChange={(e) => setNewEn(e.target.value)}
                 disabled={isAdding}
               />
+
+              {/* Branch Selector */}
+              <div className="mb-6">
+                <BranchSelector
+                  selectedBranches={newBranches}
+                  onChange={setNewBranches}
+                  label="الفروع المتاح فيها التصنيف"
+                  description="اختر الفروع التي سيكون هذا التصنيف متاحاً فيها"
+                  required={true}
+                />
+              </div>
+
               <div className="flex justify-end gap-4">
                 <button
                   onClick={() => setIsAddModalOpen(false)}
