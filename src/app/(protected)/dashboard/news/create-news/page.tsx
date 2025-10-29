@@ -42,6 +42,8 @@ import {
   needsCompression,
   formatFileSize,
 } from "../../../../../lib/image-compression";
+import { BranchSelector } from "@/components/BranchSelector";
+import { updateProductBranches } from "@/services/apiBranchProducts";
 
 type ProductFormValues = {
   title_ar: string;
@@ -96,19 +98,32 @@ const CreateProductForm: React.FC = () => {
   }, [setValue]);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: createProduct,
+    mutationFn: async (productData: ProductWithTypes) => {
+      // Create the product first
+      const newProduct = await createProduct(productData);
+
+      // If branches are selected, link them to the product
+      if (selectedBranches.length > 0 && newProduct?.id) {
+        await updateProductBranches(newProduct.id, selectedBranches);
+      }
+
+      return newProduct;
+    },
     onSuccess: () => {
-      toast.success("تم إنشاء المنتج بنجاح");
+      toast.success("تم إنشاء المنتج وربطه بالفروع بنجاح");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push("/dashboard/news");
     },
-    onError: (error) => toast.error("حدث خطأ ما" + error.message),
+    onError: (error) => toast.error("حدث خطأ ما: " + error.message),
   });
 
   // Upload image
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+
+  // Selected branches
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -255,6 +270,12 @@ const CreateProductForm: React.FC = () => {
     // تحقق من وجود صورة
     if (!selectedImage) {
       toast.error("يجب إضافة صورة واحدة على الأقل");
+      return;
+    }
+
+    // تحقق من اختيار فرع واحد على الأقل
+    if (selectedBranches.length === 0) {
+      toast.error("يجب اختيار فرع واحد على الأقل");
       return;
     }
 
@@ -453,6 +474,17 @@ const CreateProductForm: React.FC = () => {
                             </option>
                           ))}
                     </select>
+                  </div>
+
+                  {/* Branch Selector */}
+                  <div className="sm:col-span-2 mb-[20px]">
+                    <BranchSelector
+                      selectedBranches={selectedBranches}
+                      onChange={setSelectedBranches}
+                      label="الفروع المتاح فيها المنتج"
+                      description="اختر الفروع التي سيكون هذا المنتج متاحاً فيها"
+                      required={true}
+                    />
                   </div>
 
                   <div className="sm:col-span-2 mb-[20px] sm:mb-0">

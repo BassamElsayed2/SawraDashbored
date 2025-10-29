@@ -39,6 +39,11 @@ import {
   needsCompression,
   formatFileSize,
 } from "../../../../../lib/image-compression";
+import { BranchSelector } from "@/components/BranchSelector";
+import {
+  updateProductBranches,
+  getProductBranches,
+} from "@/services/apiBranchProducts";
 
 interface ProductFormData {
   title_ar: string;
@@ -61,6 +66,10 @@ export default function EditProductPage() {
   const [sizesByType, setSizesByType] = useState<{
     [key: number]: ProductSize[];
   }>({});
+
+  // Selected branches
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(true);
 
   const { register, handleSubmit, reset, control } = useForm({
     defaultValues: {
@@ -130,6 +139,28 @@ export default function EditProductPage() {
       }
     }
   }, [product, reset]);
+
+  // Load product branches
+  useEffect(() => {
+    const loadBranches = async () => {
+      if (!id) return;
+
+      try {
+        setLoadingBranches(true);
+        const branches = await getProductBranches(id);
+        setSelectedBranches(branches.map((b: { id: string }) => b.id));
+      } catch (error) {
+        console.error("Failed to load product branches:", error);
+        toast.error("فشل في تحميل فروع المنتج");
+      } finally {
+        setLoadingBranches(false);
+      }
+    };
+
+    if (id) {
+      loadBranches();
+    }
+  }, [id]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -286,8 +317,13 @@ export default function EditProductPage() {
       // تنفيذ التحديث في Supabase
       await updateProduct(id, updatedData);
 
+      // Update product branches
+      if (selectedBranches.length > 0) {
+        await updateProductBranches(id, selectedBranches);
+      }
+
       // يمكنك هنا إعادة التوجيه أو عرض رسالة نجاح
-      toast.success("تم تحديث المنتج بنجاح");
+      toast.success("تم تحديث المنتج والفروع بنجاح");
       queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push("/dashboard/news");
     } catch {
@@ -352,6 +388,26 @@ export default function EditProductPage() {
                     </select>
                   </div>
                 )}
+
+                {/* Branch Selector */}
+                <div className="sm:col-span-2 mb-[20px]">
+                  {!loadingBranches && (
+                    <BranchSelector
+                      selectedBranches={selectedBranches}
+                      onChange={setSelectedBranches}
+                      label="الفروع المتاح فيها المنتج"
+                      description="اختر الفروع التي سيكون هذا المنتج متاحاً فيها"
+                      required={true}
+                    />
+                  )}
+                  {loadingBranches && (
+                    <div className="text-center py-4">
+                      <span className="text-gray-500">
+                        جاري تحميل الفروع...
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {/* الخبر بالعربية */}
                 <div className="sm:col-span-2">

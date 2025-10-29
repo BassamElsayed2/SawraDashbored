@@ -21,7 +21,8 @@ export function useAddCategory() {
         image_url = await uploadCategoryImage(image, "categories");
       }
 
-      await createCategory({ name_ar, name_en, image_url });
+      const category = await createCategory({ name_ar, name_en, image_url });
+      return category;
     },
     onSuccess: () => {
       toast.success("تمت إضافة التصنيف بنجاح");
