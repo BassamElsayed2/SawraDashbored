@@ -21,6 +21,8 @@ const defaultCenter = {
   lng: 46.6753,
 };
 
+const libraries: ("places" | "geometry")[] = ["places", "geometry"];
+
 const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   onLocationSelect,
   initialLat,
@@ -42,6 +44,8 @@ const GoogleMapPicker: React.FC<GoogleMapPickerProps> = ({
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries,
+    language: "ar",
   });
 
   const onMapClick = useCallback(
