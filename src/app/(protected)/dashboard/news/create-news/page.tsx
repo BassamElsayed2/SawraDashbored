@@ -21,7 +21,7 @@ import {
   Toolbar,
 } from "react-simple-wysiwyg";
 import { useCategories } from "@/components/news/categories/useCategories";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors, Path } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createProduct,
@@ -56,6 +56,20 @@ type ProductFormValues = {
   types: ProductType[];
 };
 
+// Extended errors type to include dynamic nested paths for types and sizes
+type ExtendedFieldErrors = FieldErrors<ProductFormValues> & {
+  types?: Array<{
+    name_ar?: { message?: string };
+    name_en?: { message?: string };
+    sizes?: Array<{
+      size_ar?: { message?: string };
+      size_en?: { message?: string };
+      price?: { message?: string };
+      offer_price?: { message?: string };
+    }>;
+  }>;
+};
+
 const CreateProductForm: React.FC = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -71,7 +85,7 @@ const CreateProductForm: React.FC = () => {
     "Write the product description in English..."
   );
 
-  const { register, handleSubmit, setValue, formState } =
+  const { register, handleSubmit, setValue, formState, setError, clearErrors } =
     useForm<ProductFormValues>({
       defaultValues: {
         types: [],
@@ -79,6 +93,102 @@ const CreateProductForm: React.FC = () => {
     });
 
   const { errors } = formState;
+
+  // دالة للتمرير تلقائياً للحقل الذي يحتوي على خطأ
+  const scrollToFirstError = (errors: FieldErrors<ProductFormValues>) => {
+    // البحث عن أول حقل يحتوي على خطأ
+    const findFirstErrorField = (errors: FieldErrors<ProductFormValues> | Record<string, unknown>, path = ""): string | null => {
+      const errorsObj = errors as Record<string, unknown>;
+      for (const key in errorsObj) {
+        const currentPath = path ? `${path}.${key}` : key;
+        const error = errorsObj[key];
+
+        if (error && typeof error === "object" && "message" in error && error.message) {
+          return currentPath;
+        }
+
+        if (error && typeof error === "object" && !("message" in error)) {
+          const nestedError = findFirstErrorField(error as Record<string, unknown>, currentPath);
+          if (nestedError) return nestedError;
+        }
+      }
+      return null;
+    };
+
+    const firstErrorPath = findFirstErrorField(errors);
+    if (!firstErrorPath) return;
+
+    // تحويل مسار الخطأ إلى selector
+    const pathParts = firstErrorPath.split(".");
+    let selector = "";
+
+    if (pathParts[0] === "title_ar") {
+      selector = 'input[data-field="title_ar"], input[name="title_ar"], input[id="title_ar"]';
+    } else if (pathParts[0] === "title_en") {
+      selector = 'input[data-field="title_en"], input[name="title_en"], input[id="title_en"]';
+    } else if (pathParts[0] === "category_id") {
+      selector = 'select[data-field="category_id"], select[name="category_id"], select[id="category_id"]';
+    } else if (pathParts[0] === "types") {
+      // للأنواع والأحجام، نبحث عن أول input في النوع/الحجم
+      const typeIndex = pathParts[1] ? parseInt(pathParts[1]) : 0;
+      if (pathParts[2] === "name_ar") {
+        selector = `input[data-type-index="${typeIndex}"][data-field="name_ar"]`;
+      } else if (pathParts[2] === "name_en") {
+        selector = `input[data-type-index="${typeIndex}"][data-field="name_en"]`;
+      } else if (pathParts[2] === "sizes") {
+        const sizeIndex = pathParts[3] ? parseInt(pathParts[3]) : 0;
+        if (pathParts[4] === "size_ar") {
+          selector = `input[data-type-index="${typeIndex}"][data-size-index="${sizeIndex}"][data-field="size_ar"]`;
+        } else if (pathParts[4] === "size_en") {
+          selector = `input[data-type-index="${typeIndex}"][data-size-index="${sizeIndex}"][data-field="size_en"]`;
+        } else if (pathParts[4] === "price") {
+          selector = `input[data-type-index="${typeIndex}"][data-size-index="${sizeIndex}"][data-field="price"]`;
+        }
+      }
+    }
+
+    // البحث عن العنصر والتمرير إليه
+    setTimeout(() => {
+      let element: HTMLElement | null = null;
+
+      if (selector) {
+        element = document.querySelector(selector) as HTMLElement;
+      }
+
+      // إذا لم نجد العنصر بالـ selector، نحاول البحث بطريقة أخرى
+      if (!element) {
+        // البحث عن أول input/select يحتوي على خطأ
+        const allInputs = document.querySelectorAll("input, select, textarea");
+        for (const input of Array.from(allInputs)) {
+          const inputElement = input as HTMLElement;
+          // التحقق إذا كان الحقل يحتوي على خطأ (عن طريق البحث عن رسالة الخطأ القريبة)
+          const errorMessage = inputElement.parentElement?.querySelector(".text-red-700");
+          if (errorMessage) {
+            element = inputElement;
+            break;
+          }
+        }
+      }
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        // إضافة focus للحقل
+        if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
+          element.focus();
+        }
+      }
+    }, 100);
+  };
+
+  // مراقبة الأخطاء والتمرير تلقائياً
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      scrollToFirstError(errors);
+    }
+  }, [errors]);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
@@ -114,7 +224,66 @@ const CreateProductForm: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push("/dashboard/news");
     },
-    onError: (error) => toast.error("حدث خطأ ما: " + error.message),
+    onError: (error) => {
+      // مسح الأخطاء السابقة
+      clearErrors();
+      
+      // التحقق من وجود أخطاء التحقق
+      if (
+        error instanceof Error &&
+        "validationErrors" in error &&
+        Array.isArray((error as Error & { validationErrors: unknown[] }).validationErrors)
+      ) {
+        const validationErrors = (error as Error & { validationErrors: Array<{
+          field: string;
+          message: string;
+        }> }).validationErrors;
+
+        // معالجة كل خطأ وربطه بالحقل المناسب
+        const errorMessages: string[] = [];
+        validationErrors.forEach((err) => {
+          // تحويل مسار الحقل إلى مسار يمكن استخدامه مع setError
+          // مثال: types.0.sizes.1.price -> types.0.sizes.1.price
+          const fieldPath = err.field as Path<ProductFormValues>;
+
+          // محاولة ربط الخطأ بالحقل المناسب
+          setError(fieldPath, {
+            type: "server",
+            message: err.message,
+          });
+          
+          // جمع رسائل الخطأ لعرضها في toast
+          errorMessages.push(err.message);
+        });
+
+        // عرض toast بجميع رسائل الخطأ
+        if (errorMessages.length > 0) {
+          // إزالة الرسائل المكررة
+          const uniqueMessages = [...new Set(errorMessages)];
+          toast.error(uniqueMessages.join(" - "));
+        } else {
+          toast.error("حدث خطأ في التحقق من البيانات");
+        }
+      } else {
+        // للأخطاء الأخرى (غير التحقق)، عرض toast
+        let errorMessage = "حدث خطأ ما";
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+          
+          // تحسين رسائل الخطأ الشائعة
+          if (errorMessage.includes("timeout")) {
+            errorMessage = "انتهت مهلة الطلب، يرجى المحاولة مرة أخرى";
+          } else if (errorMessage.includes("Network") || errorMessage.includes("fetch")) {
+            errorMessage = "خطأ في الاتصال بالخادم، يرجى التحقق من الاتصال بالإنترنت";
+          } else if (errorMessage.includes("تعذر رفع صورة المنتج")) {
+            errorMessage = "فشل رفع صورة المنتج، يرجى المحاولة مرة أخرى";
+          }
+        }
+        
+        toast.error(errorMessage);
+      }
+    },
   });
 
   // Upload image
@@ -247,7 +416,16 @@ const CreateProductForm: React.FC = () => {
   ) => {
     setSizesByType((prev) => {
       const updatedSizes = [...(prev[typeIndex] || [])];
-      updatedSizes[sizeIndex] = { ...updatedSizes[sizeIndex], [field]: value };
+      // إذا كان الحقل هو price وكان القيمة غير صالحة، استخدم 0
+      if (field === "price") {
+        if (value === "" || value === null || value === undefined || isNaN(Number(value))) {
+          updatedSizes[sizeIndex] = { ...updatedSizes[sizeIndex], [field]: 0 };
+        } else {
+          updatedSizes[sizeIndex] = { ...updatedSizes[sizeIndex], [field]: Number(value) };
+        }
+      } else {
+        updatedSizes[sizeIndex] = { ...updatedSizes[sizeIndex], [field]: value };
+      }
       return {
         ...prev,
         [typeIndex]: updatedSizes,
@@ -256,6 +434,9 @@ const CreateProductForm: React.FC = () => {
   };
 
   const onSubmit = async (data: ProductFormValues) => {
+    // مسح جميع الأخطاء السابقة
+    clearErrors();
+    
     if (!userId) {
       toast.error("حدث خطأ: لم يتم تحديد المستخدم");
       return;
@@ -281,7 +462,12 @@ const CreateProductForm: React.FC = () => {
 
     // تحقق من وجود أنواع
     if (types.length === 0) {
-      toast.error("يجب إضافة نوع واحد على الأقل للمنتج");
+      const errorMsg = "يجب إضافة نوع واحد على الأقل للمنتج";
+      setError("types" as Path<ProductFormValues>, {
+        type: "manual",
+        message: errorMsg,
+      });
+      toast.error(errorMsg);
       return;
     }
 
@@ -289,11 +475,34 @@ const CreateProductForm: React.FC = () => {
     for (let i = 0; i < types.length; i++) {
       const typeSizes = sizesByType[i] || [];
       if (typeSizes.length === 0) {
-        toast.error(
-          `يجب إضافة حجم واحد على الأقل للنوع ${
-            types[i].name_ar || `النوع ${i + 1}`
-          }`
-        );
+        const errorMsg = `يجب إضافة حجم واحد على الأقل للنوع ${
+          types[i].name_ar || `النوع ${i + 1}`
+        }`;
+        setError(`types.${i}.sizes` as Path<ProductFormValues>, {
+          type: "manual",
+          message: errorMsg,
+        });
+        toast.error(errorMsg);
+        return;
+      }
+      
+      // التحقق من أسماء الأنواع
+      if (!types[i].name_ar || types[i].name_ar.trim() === "") {
+        const errorMsg = "اسم النوع بالعربية مطلوب";
+        setError(`types.${i}.name_ar` as Path<ProductFormValues>, {
+          type: "manual",
+          message: errorMsg,
+        });
+        toast.error(errorMsg);
+        return;
+      }
+      if (!types[i].name_en || types[i].name_en.trim() === "") {
+        const errorMsg = "اسم النوع بالإنجليزية مطلوب";
+        setError(`types.${i}.name_en` as Path<ProductFormValues>, {
+          type: "manual",
+          message: errorMsg,
+        });
+        toast.error(errorMsg);
         return;
       }
 
@@ -301,25 +510,51 @@ const CreateProductForm: React.FC = () => {
       for (let j = 0; j < typeSizes.length; j++) {
         const size = typeSizes[j];
         if (!size.size_ar || size.size_ar.trim() === "") {
-          toast.error(`يجب إدخال اسم الحجم بالعربية للنوع ${types[i].name_ar}`);
+          const errorMsg = "اسم الحجم بالعربية مطلوب";
+          setError(`types.${i}.sizes.${j}.size_ar` as Path<ProductFormValues>, {
+            type: "manual",
+            message: errorMsg,
+          });
+          toast.error(errorMsg);
           return;
         }
         if (!size.size_en || size.size_en.trim() === "") {
-          toast.error(
-            `يجب إدخال اسم الحجم بالإنجليزية للنوع ${types[i].name_ar}`
-          );
+          const errorMsg = "اسم الحجم بالإنجليزية مطلوب";
+          setError(`types.${i}.sizes.${j}.size_en` as Path<ProductFormValues>, {
+            type: "manual",
+            message: errorMsg,
+          });
+          toast.error(errorMsg);
           return;
         }
-        if (!size.price || size.price <= 0) {
-          toast.error(`يجب إدخال سعر صحيح (أكبر من صفر) للحجم ${size.size_ar}`);
+        // التحقق من السعر - يجب أن يكون رقم صحيح وموجب
+        const priceValue = Number(size.price);
+        if (
+          size.price === undefined ||
+          size.price === null ||
+          isNaN(priceValue) ||
+          priceValue <= 0 ||
+          size.price === 0
+        ) {
+          const errorMsg = "السعر مطلوب";
+          setError(`types.${i}.sizes.${j}.price` as Path<ProductFormValues>, {
+            type: "manual",
+            message: errorMsg,
+          });
+          toast.error(errorMsg);
           return;
         }
         if (
           size.offer_price !== undefined &&
           size.offer_price !== null &&
-          size.offer_price <= 0
+          (isNaN(Number(size.offer_price)) || Number(size.offer_price) <= 0)
         ) {
-          toast.error(`سعر العرض يجب أن يكون أكبر من صفر أو فارغاً`);
+          const errorMsg = "سعر العرض يجب أن يكون رقم موجب";
+          setError(`types.${i}.sizes.${j}.offer_price` as Path<ProductFormValues>, {
+            type: "manual",
+            message: errorMsg,
+          });
+          toast.error(errorMsg);
           return;
         }
       }
@@ -419,6 +654,7 @@ const CreateProductForm: React.FC = () => {
                           message: "يجب الايزيد عن 100 حرف",
                         },
                       })}
+                      data-field="title_ar"
                     />
                     {errors?.title_ar?.message && (
                       <span className="text-red-700 text-sm">
@@ -442,6 +678,7 @@ const CreateProductForm: React.FC = () => {
                           message: "يجب الايزيد عن 100 حرف",
                         },
                       })}
+                      data-field="title_en"
                     />
                     {errors?.title_en?.message && (
                       <span className="text-red-700 text-sm">
@@ -459,6 +696,7 @@ const CreateProductForm: React.FC = () => {
                     <select
                       className="h-[55px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
                       {...register("category_id")}
+                      data-field="category_id"
                       onChange={handleCategoryChange}
                     >
                       <option value="">اختر التصنيف</option>
@@ -684,6 +922,8 @@ const CreateProductForm: React.FC = () => {
                             </label>
                             <input
                               type="text"
+                              data-type-index={typeIndex}
+                              data-field="name_ar"
                               className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
                               placeholder="مثل: رول، مثلث، عادي"
                               value={type.name_ar}
@@ -691,6 +931,11 @@ const CreateProductForm: React.FC = () => {
                                 updateType(typeIndex, "name_ar", e.target.value)
                               }
                             />
+                            {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.name_ar?.message && (
+                              <span className="text-red-700 text-sm mt-1 block">
+                                {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.name_ar?.message}
+                              </span>
+                            )}
                           </div>
 
                           <div>
@@ -699,6 +944,8 @@ const CreateProductForm: React.FC = () => {
                             </label>
                             <input
                               type="text"
+                              data-type-index={typeIndex}
+                              data-field="name_en"
                               className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
                               placeholder="مثل: Roll, Triangle, Regular"
                               value={type.name_en}
@@ -706,6 +953,11 @@ const CreateProductForm: React.FC = () => {
                                 updateType(typeIndex, "name_en", e.target.value)
                               }
                             />
+                            {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.name_en?.message && (
+                              <span className="text-red-700 text-sm mt-1 block">
+                                {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.name_en?.message}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -764,6 +1016,9 @@ const CreateProductForm: React.FC = () => {
                                         </label>
                                         <input
                                           type="text"
+                                          data-type-index={typeIndex}
+                                          data-size-index={sizeIndex}
+                                          data-field="size_ar"
                                           className="h-[40px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[15px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
                                           placeholder="مثل: صغير، متوسط، كبير"
                                           value={size.size_ar}
@@ -776,6 +1031,11 @@ const CreateProductForm: React.FC = () => {
                                             )
                                           }
                                         />
+                                        {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.size_ar?.message && (
+                                          <span className="text-red-700 text-xs mt-1 block">
+                                            {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.size_ar?.message}
+                                          </span>
+                                        )}
                                       </div>
 
                                       <div>
@@ -784,6 +1044,9 @@ const CreateProductForm: React.FC = () => {
                                         </label>
                                         <input
                                           type="text"
+                                          data-type-index={typeIndex}
+                                          data-size-index={sizeIndex}
+                                          data-field="size_en"
                                           className="h-[40px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[15px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
                                           placeholder="مثل: Small, Medium, Large"
                                           value={size.size_en}
@@ -796,6 +1059,11 @@ const CreateProductForm: React.FC = () => {
                                             )
                                           }
                                         />
+                                        {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.size_en?.message && (
+                                          <span className="text-red-700 text-xs mt-1 block">
+                                            {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.size_en?.message}
+                                          </span>
+                                        )}
                                       </div>
 
                                       <div>
@@ -804,18 +1072,48 @@ const CreateProductForm: React.FC = () => {
                                         </label>
                                         <input
                                           type="number"
+                                          data-type-index={typeIndex}
+                                          data-size-index={sizeIndex}
+                                          data-field="price"
                                           className="h-[40px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[15px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
                                           placeholder="0.00"
                                           value={size.price}
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            const value = e.target.value;
+                                            const numValue = value === "" ? 0 : Number(value);
                                             updateSize(
                                               typeIndex,
                                               sizeIndex,
                                               "price",
-                                              Number(e.target.value)
-                                            )
-                                          }
+                                              numValue
+                                            );
+                                            // التحقق الفوري من السعر
+                                            if (value === "" || isNaN(numValue) || numValue <= 0) {
+                                              setError(`types.${typeIndex}.sizes.${sizeIndex}.price` as Path<ProductFormValues>, {
+                                                type: "manual",
+                                                message: "السعر مطلوب",
+                                              });
+                                            } else {
+                                              clearErrors(`types.${typeIndex}.sizes.${sizeIndex}.price` as Path<ProductFormValues>);
+                                            }
+                                          }}
+                                          onBlur={(e) => {
+                                            const value = e.target.value;
+                                            const numValue = value === "" ? 0 : Number(value);
+                                            // التحقق عند فقدان التركيز
+                                            if (value === "" || isNaN(numValue) || numValue <= 0) {
+                                              setError(`types.${typeIndex}.sizes.${sizeIndex}.price` as Path<ProductFormValues>, {
+                                                type: "manual",
+                                                message: "السعر مطلوب",
+                                              });
+                                            }
+                                          }}
                                         />
+                                        {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.price?.message && (
+                                          <span className="text-red-700 text-xs mt-1 block">
+                                            {(errors as ExtendedFieldErrors)?.types?.[typeIndex]?.sizes?.[sizeIndex]?.price?.message}
+                                          </span>
+                                        )}
                                       </div>
 
                                       <div>
