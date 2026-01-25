@@ -57,17 +57,15 @@ class ApiClient {
       if (!response.ok) {
         // Log detailed validation errors if available
         if (responseData.errors && Array.isArray(responseData.errors)) {
-          // Create a detailed error message with all validation errors
-          const errorDetails = responseData.errors
-            .map(
-              (err: { field: string; message: string }) =>
-                `${err.field}: ${err.message}`
-            )
-            .join(", ");
-
-          throw new Error(
-            `${responseData.message || "Validation failed"}: ${errorDetails}`
-          );
+          // إنشاء خطأ مخصص يحتوي على معلومات الأخطاء
+          const validationError = new Error(
+            responseData.message || "فشل التحقق من البيانات"
+          ) as Error & { validationErrors?: Array<{ field: string; message: string }> };
+          
+          // إضافة معلومات الأخطاء للخطأ
+          validationError.validationErrors = responseData.errors;
+          
+          throw validationError;
         }
 
         throw new Error(
