@@ -21,23 +21,10 @@ const GoogleMapPicker = dynamic(
   { ssr: false }
 );
 
-// Helper function to build full image URL
-const getImageUrl = (branch: Branch): string => {
-  // Prefer image_url over legacy image field
-  const imagePath = branch.image_url || branch.image;
+import { getImageUrl as getImageUrlFromLib } from "@/lib/image-url";
 
-  if (!imagePath) return "/placeholder.jpg";
-
-  // If already a full URL, return as is
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
-  }
-
-  // If relative path, build full URL with backend
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
-  return `${API_URL}${cleanPath}`;
-};
+const getImageUrl = (branch: Branch): string =>
+  getImageUrlFromLib(branch.image_url || branch.image);
 
 export interface Branch {
   id: string;

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/image-url";
 
 interface TopProduct {
   id: string;
@@ -80,7 +81,7 @@ const TopProducts: React.FC<TopProductsProps> = ({ products, isLoading }) => {
             </div>
             <div className="relative w-16 h-16 rounded-lg overflow-hidden shadow-md">
               <Image
-                src={product.image_url || "/placeholder.jpg"}
+                src={getImageUrl(product.image_url)}
                 alt={product.title}
                 fill
                 className="object-cover"

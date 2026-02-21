@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 import { useAuth } from "@/providers/AuthProvider";
+import { getImageUrl } from "@/lib/image-url";
 
 const ProfileMenu: React.FC = () => {
   const pathname = usePathname();
@@ -66,7 +67,7 @@ const ProfileMenu: React.FC = () => {
         }`}
       >
         <Image
-          src={profile?.image_url || "/"}
+          src={getImageUrl(profile?.image_url)}
           className="w-[35px] h-[35px] md:w-[42px] md:h-[42px] rounded-full ltr:md:mr-[2px] ltr:lg:mr-[8px] rtl:md:ml-[2px] rtl:lg:ml-[8px] border-[2px] border-primary-200 inline-block"
           alt="admin-image"
           width={35}
@@ -82,7 +83,7 @@ const ProfileMenu: React.FC = () => {
         <div className="profile-menu-dropdown bg-white dark:bg-[#0c1427] transition-all shadow-3xl dark:shadow-none py-[22px] absolute mt-[13px] md:mt-[14px] w-[195px] z-[1] top-full ltr:right-0 rtl:left-0 rounded-md">
           <div className="flex items-center border-b border-gray-100 dark:border-[#172036] pb-[12px] mx-[20px] mb-[10px]">
             <Image
-              src={profile?.image_url || "/"}
+              src={getImageUrl(profile?.image_url)}
               className="rounded-full w-[31px] h-[31px] ltr:mr-[9px] rtl:ml-[9px] border-2 border-primary-200 inline-block"
               alt="admin-image"
               width={31}

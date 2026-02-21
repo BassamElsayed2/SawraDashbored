@@ -14,6 +14,7 @@ import {
   needsCompression,
   formatFileSize,
 } from "../../../../src/lib/image-compression";
+import { getImageUrl } from "@/lib/image-url";
 import toast from "react-hot-toast";
 
 const SettingsForm: React.FC = () => {
@@ -292,8 +293,7 @@ const SettingsForm: React.FC = () => {
                               src={
                                 profilePicture
                                   ? URL.createObjectURL(profilePicture)
-                                  : profile?.image_url ||
-                                    "/placeholder-user.jpg"
+                                  : getImageUrl(profile?.image_url)
                               }
                               alt="profile-preview"
                               width={80}

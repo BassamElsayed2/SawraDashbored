@@ -13,6 +13,7 @@ import {
   uploadOfferImage,
   type ComboOffer,
 } from "@/services/apiComboOffers";
+import { getImageUrl } from "@/lib/image-url";
 
 type FormData = {
   title_ar: string;
@@ -270,7 +271,7 @@ const ComboOffersList: React.FC = () => {
                     <td className="py-3 px-3">
                       {offer.image_url ? (
                         <Image
-                          src={offer.image_url}
+                          src={getImageUrl(offer.image_url)}
                           alt={offer.title_en}
                           width={60}
                           height={40}

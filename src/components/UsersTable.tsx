@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/image-url";
 
 interface BaseUser {
   id: string;
@@ -125,10 +126,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, type, isLoading }) => {
                   <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                     {(user as AdminUser).image_url ? (
                       <Image
-                        src={
-                          (user as AdminUser).image_url ||
-                          "/placeholder-user.jpg"
-                        }
+                        src={getImageUrl((user as AdminUser).image_url)}
                         alt={user.full_name}
                         fill
                         className="object-cover"

@@ -3,6 +3,12 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Token for upload/auth when cookie is not sent (e.g. cross-origin)
+let authToken: string | null = null;
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
 interface FetchOptions extends RequestInit {
   data?: unknown;
 }
@@ -140,10 +146,14 @@ class ApiClient {
     }
 
     try {
+      const headers: Record<string, string> = {};
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers,
       });
 
       const data = await response.json();

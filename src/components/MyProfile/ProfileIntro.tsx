@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ProfileTypes } from "./profileType";
+import { getImageUrl } from "@/lib/image-url";
 
 interface ProfileIntroProps {
   profile?: ProfileTypes;
@@ -20,7 +21,7 @@ const ProfileIntro: React.FC<ProfileIntroProps> = ({ profile }) => {
         <div className="trezo-card-content">
           <div className="flex items-center justify-center">
             <Image
-              src={profile?.image_url || "/"}
+              src={getImageUrl(profile?.image_url)}
               alt="user-image"
               className="rounded-full w-[75px]"
               width={75}

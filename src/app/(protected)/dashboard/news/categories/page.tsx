@@ -9,6 +9,7 @@ import { useAddCategory } from "@/components/news/categories/useCreateCategory";
 import Link from "next/link";
 import { BranchSelector } from "@/components/BranchSelector";
 import { updateCategoryBranches } from "@/services/apiBranchProducts";
+import { getImageUrl } from "@/lib/image-url";
 import toast from "react-hot-toast";
 
 interface Category {
@@ -233,7 +234,7 @@ export default function CategoriesPage() {
                           <div className="relative w-[40px] h-[40px] rounded-md overflow-hidden">
                             {cat.image_url ? (
                               <Image
-                                src={cat.image_url}
+                                src={getImageUrl(cat.image_url)}
                                 alt={cat.name_ar}
                                 width={40}
                                 height={40}
