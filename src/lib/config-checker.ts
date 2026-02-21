@@ -1,39 +1,10 @@
 // Configuration checker for the feedback system
 export const configChecker = {
-  // Check if all required environment variables are set
+  // Check if required env vars are set (Supabase no longer required)
   checkEnvironmentVariables: () => {
-    const requiredVars = [
-      "NEXT_PUBLIC_SUPABASE_URL",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    ];
-
+    const requiredVars: string[] = [];
     const missingVars = requiredVars.filter((varName) => !process.env[varName]);
-
-    if (missingVars.length > 0) {
-      return false;
-    }
-
-    return true;
-  },
-
-  // Check if Supabase is properly configured
-  checkSupabaseConfig: () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      return false;
-    }
-
-    if (!supabaseUrl.startsWith("https://")) {
-      return false;
-    }
-
-    if (supabaseKey.length < 50) {
-      return false;
-    }
-
-    return true;
+    return missingVars.length === 0;
   },
 
   // Check feature flags
@@ -49,12 +20,9 @@ export const configChecker = {
     return flags;
   },
 
-  // Run all checks
+  // Run all checks (no Supabase dependency)
   runAllChecks: () => {
-    const envCheck = configChecker.checkEnvironmentVariables();
-    const supabaseCheck = configChecker.checkSupabaseConfig();
-
-    return envCheck && supabaseCheck;
+    return configChecker.checkEnvironmentVariables();
   },
 };
 

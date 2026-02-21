@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteProduct, getProducts } from "@/services/apiProducts";
 import { getCategories } from "@/services/apiCategories";
+import { getImageUrl } from "@/lib/image-url";
 import toast from "react-hot-toast";
 
 const ProductListTable: React.FC = () => {
@@ -255,12 +256,12 @@ const ProductListTable: React.FC = () => {
                             <Image
                               className="rounded-md object-cover w-full h-full"
                               alt="product-image"
-                              src={item?.image_url || "/placeholder.png"}
+                              src={getImageUrl(item?.image_url)}
                               width={40}
                               height={40}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = "/placeholder.png";
+                                target.src = "/placeholder.svg";
                               }}
                             />
                           </div>

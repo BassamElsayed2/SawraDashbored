@@ -139,14 +139,27 @@ export async function uploadProductImage(
 
 export async function deleteProductImage(imageUrl: string): Promise<void> {
   try {
-    // Extract file path from Supabase URL
-    // Supabase URLs format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
     const url = new URL(imageUrl);
-    const pathSegments = url.pathname.split("/");
-    const bucketIndex =
-      pathSegments.findIndex((segment) => segment === "public") + 1;
-    const bucket = pathSegments[bucketIndex];
-    const path = pathSegments.slice(bucketIndex + 1).join("/");
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+
+    let bucket: string;
+    let path: string;
+
+    // Backend URL format: .../uploads/product-images/filename.jpg
+    const uploadsIndex = pathSegments.indexOf("uploads");
+    if (uploadsIndex !== -1 && pathSegments.length > uploadsIndex + 1) {
+      bucket = pathSegments[uploadsIndex + 1];
+      path = pathSegments.slice(uploadsIndex + 1).join("/");
+    } else {
+      // Legacy Supabase URL: .../storage/v1/object/public/[bucket]/[path]
+      const publicIndex = pathSegments.indexOf("public");
+      if (publicIndex !== -1 && pathSegments.length > publicIndex + 2) {
+        bucket = pathSegments[publicIndex + 1];
+        path = pathSegments.slice(publicIndex + 2).join("/");
+      } else {
+        throw new Error("Invalid image URL format");
+      }
+    }
 
     await apiClient.delete("/upload/image", {
       data: { bucket, path },

@@ -6,6 +6,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
 
 import { getOffers } from "@/services/apiComboOffers";
+import { getImageUrl } from "@/lib/image-url";
 
 const RecentProperty: React.FC = () => {
   const { data: comboOffers } = useQuery({
@@ -54,7 +55,7 @@ const RecentProperty: React.FC = () => {
                 <div
                   className="rounded-[5px] h-[112px] bg-cover bg-no-repeat bg-center"
                   style={{
-                    backgroundImage: `url(${comboOffer.image_url})`,
+                    backgroundImage: `url(${getImageUrl(comboOffer.image_url)})`,
                   }}
                 ></div>
 

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import * as apiAuth from "@/services/apiAuth";
 import type { User } from "@/services/apiAuth";
+import { setAuthToken } from "@/services/api-client";
 import toast from "react-hot-toast";
 
 interface AuthContextType {
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(userData);
+      if (response.data?.token) setAuthToken(response.data.token);
       toast.success("تم تسجيل الدخول بنجاح");
       router.push("/dashboard/");
       router.refresh();
@@ -95,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      setAuthToken(null);
       await apiAuth.signOut();
       toast.success("تم تسجيل الخروج بنجاح");
     } catch {

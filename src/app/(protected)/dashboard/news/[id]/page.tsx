@@ -30,6 +30,7 @@ import {
   ProductType,
   ProductSize,
 } from "@/services/apiProducts";
+import { getImageUrl } from "@/lib/image-url";
 import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm, FieldErrors } from "react-hook-form";
 import Image from "next/image";
@@ -835,14 +836,14 @@ export default function EditProductPage() {
                       {serverImage && (
                         <div className="relative w-[50px] h-[50px]">
                           <Image
-                            src={serverImage}
+                            src={getImageUrl(serverImage)}
                             alt="server-img"
                             width={50}
                             height={50}
                             className="rounded-md object-cover w-full h-full"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder.png";
+                              target.src = "/placeholder.svg";
                             }}
                           />
                           <button
