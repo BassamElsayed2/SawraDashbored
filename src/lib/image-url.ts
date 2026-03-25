@@ -7,30 +7,44 @@ function getBackendBaseUrl(): string {
   return base || "http://localhost:5000";
 }
 
+/** Supabase storage host - never used directly for rendering */
+const SUPABASE_STORAGE_REGEX =
+  /^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//;
+
 /**
  * Returns image URL that always points to the current backend.
- * Rewrites stored URLs (e.g. https://api.elsawa.net/uploads/...) to use
- * NEXT_PUBLIC_API_URL base so images work in dev and when domain changes.
+ * Rewrites any old stored URL to the current backend uploads path.
+ * Supabase URLs are never used directly for rendering.
  */
 export function getImageUrl(url: string | null | undefined): string {
   if (!url) return "/placeholder.svg";
 
+  const base = getBackendBaseUrl();
+
+  // Never render from Supabase directly: rewrite to backend /uploads path
+  if (SUPABASE_STORAGE_REGEX.test(url)) {
+    const m = url.match(
+      /^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/
+    );
+    if (m) return `${base}/uploads/${m[1]}/${m[2]}`;
+    return "/placeholder.svg";
+  }
+
   // Extract path from any full URL containing /uploads/
   const uploadsMatch = url.match(/^(https?:\/\/[^/]+)(\/uploads\/.*)$/);
   if (uploadsMatch) {
-    const base = getBackendBaseUrl();
     return `${base}${uploadsMatch[2]}`;
   }
 
   // Relative path
   if (url.startsWith("/")) {
-    const base = getBackendBaseUrl();
-    return `${base}${url}`;
+    const path = url.startsWith("/uploads/") ? url : `/uploads${url}`;
+    return `${base}${path}`;
   }
   if (!url.startsWith("http")) {
-    const base = getBackendBaseUrl();
-    return `${base}/${url}`;
+    return `${base}/uploads/${url.replace(/^\/+/, "")}`;
   }
 
-  return url;
+  // Unknown absolute URL (non-backend/non-supabase): don't trust it
+  return "/placeholder.svg";
 }
