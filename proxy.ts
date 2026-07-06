@@ -1,4 +1,4 @@
-// middleware.ts - Auth Middleware for Dashboard
+// proxy.ts - Auth Proxy for Dashboard
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // Public routes that don't require authentication
 const publicRoutes = ["/"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Normalize pathname (remove trailing slash for comparison, except for root)
@@ -49,7 +49,7 @@ export async function middleware(req: NextRequest) {
         redirectResponse.cookies.delete("dashboard_session");
         return redirectResponse;
       }
-    } catch (error) {
+    } catch {
       // مسح الكوكي في حالة حدوث خطأ للأمان
       const url = req.nextUrl.clone();
       const redirectResponse = NextResponse.redirect(url);
@@ -104,7 +104,7 @@ export async function middleware(req: NextRequest) {
         redirectResponse.cookies.delete("dashboard_session");
         return redirectResponse;
       }
-    } catch (error) {
+    } catch {
       // On error, redirect to home page for safety
       const url = req.nextUrl.clone();
       url.pathname = "/";

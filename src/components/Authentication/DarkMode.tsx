@@ -3,48 +3,40 @@
 import React, { useState, useEffect } from "react";
 
 const DarkMode: React.FC = () => {
-  // Light/Dark Mode
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Retrieve the user's preference from local storage
     const storedPreference = localStorage.getItem("theme");
-    if (storedPreference === "dark") {
-      setIsDarkMode(true);
-    }
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setIsDarkMode(storedPreference === "dark" || (!storedPreference && prefersDark));
+    setMounted(true);
   }, []);
 
-  const handleToggle = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   useEffect(() => {
-    // Update the user's preference in local storage
+    if (!mounted) return;
+
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
 
-    // Update the class on the <html> element to apply the selected mode
     const htmlElement = document.querySelector("html");
     if (htmlElement) {
-      if (isDarkMode) {
-        htmlElement.classList.add("dark");
-      } else {
-        htmlElement.classList.remove("dark");
-      }
+      htmlElement.classList.toggle("dark", isDarkMode);
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, mounted]);
+
+  if (!mounted) return null;
 
   return (
-    <>
-      <button
-        type="button"
-        className="light-dark-toggle leading-none inline-block transition-all text-[#fe7a36] absolute top-[20px] md:top-[25px] ltr:right-[20px] rtl:left-[20px] ltr:md:right-[25px] rtl:md:left-[25px]"
-        onClick={handleToggle}
-      >
-        <i className="material-symbols-outlined !text-[20px] md:!text-[22px]">
-          light_mode
-        </i>
-      </button>
-    </>
+    <button
+      type="button"
+      aria-label={isDarkMode ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+      className="fixed top-5 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-gray-200/80 bg-white/80 text-primary-500 shadow-md backdrop-blur-sm transition-all hover:scale-105 hover:bg-white hover:shadow-lg dark:border-[#172036] dark:bg-[#0c1427]/80 dark:hover:bg-[#0c1427] ltr:right-5 rtl:left-5"
+      onClick={() => setIsDarkMode((prev) => !prev)}
+    >
+      <i className="material-symbols-outlined text-[22px]">
+        {isDarkMode ? "light_mode" : "dark_mode"}
+      </i>
+    </button>
   );
 };
 
