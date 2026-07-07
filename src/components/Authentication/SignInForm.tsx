@@ -47,7 +47,9 @@ const SignInForm: React.FC = () => {
               key={feature.label}
               className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-white/70 px-3 py-1.5 text-xs font-medium text-primary-700 backdrop-blur-sm dark:border-primary-800 dark:bg-[#0c1427]/70 dark:text-primary-300"
             >
-              <i className="material-symbols-outlined text-[14px]">{feature.icon}</i>
+              <i className="material-symbols-outlined text-[14px]">
+                {feature.icon}
+              </i>
               {feature.label}
             </span>
           ))}
@@ -119,15 +121,12 @@ const SignInForm: React.FC = () => {
                 <Image
                   src="/images/logo-icon.png"
                   alt="ENS"
-                  width={56}
-                  height={56}
-                  className="h-14 w-14"
-                  style={{ width: "56px", height: "auto" }}
+                  width={150}
+                  height={150}
+                  className="w-14"
+                  style={{ height: "auto" }}
                 />
                 <div>
-                  <p className="text-xl font-bold text-black dark:text-white">
-                    ENS
-                  </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     لوحة التحكم
                   </p>
@@ -183,7 +182,9 @@ const SignInForm: React.FC = () => {
                   />
                   <button
                     type="button"
-                    aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                    aria-label={
+                      showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                    }
                     className="absolute bottom-[12px] text-lg transition-all hover:text-primary-500 ltr:right-[20px] rtl:left-[20px]"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
@@ -199,7 +200,9 @@ const SignInForm: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-600 dark:border-danger-800 dark:bg-danger-900/20 dark:text-danger-400"
                   >
-                    <i className="material-symbols-outlined text-[18px]">error</i>
+                    <i className="material-symbols-outlined text-[18px]">
+                      error
+                    </i>
                     <span>البريد الإلكتروني أو كلمة المرور غير صالحة</span>
                   </motion.div>
                 )}

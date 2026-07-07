@@ -43,11 +43,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ toggleActive }) => {
             className="transition-none relative flex items-center outline-none"
           >
               <Image
-                  src="/images/logo-icon.png"
-                  alt="logo-icon"
-                  width={150}
-                  height={150}
-                />
+                src="/images/logo-icon.png"
+                alt="logo-icon"
+                width={150}
+                height={150}
+                className="w-[150px]"
+                style={{ height: "auto" }}
+              />
          {/*    <span className="font-bold text-black dark:text-white relative ltr:ml-[8px] rtl:mr-[8px] top-px text-xl">
               ENS
             </span> */}
