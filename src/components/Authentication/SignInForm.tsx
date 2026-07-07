@@ -147,59 +147,50 @@ const SignInForm: React.FC = () => {
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-2 block font-medium text-black dark:text-white"
+                    className="mb-[10px] block font-medium text-black dark:text-white md:mb-[12px]"
                   >
                     عنوان البريد الإلكتروني
                   </label>
-                  <div className="relative">
-                    <i className="material-symbols-outlined absolute top-1/2 -translate-y-1/2 text-gray-400 ltr:left-4 rtl:right-4">
-                      mail
-                    </i>
-                    <input
-                      type="email"
-                      id="email"
-                      autoComplete="email"
-                      placeholder="name@example.com"
-                      value={email}
-                      disabled={isPending}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-[52px] w-full rounded-xl border border-gray-200 bg-white px-12 text-black outline-none transition-all placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 disabled:opacity-60 dark:border-[#172036] dark:bg-[#0a0e19] dark:text-white dark:placeholder:text-gray-500"
-                    />
-                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    autoComplete="email"
+                    dir="ltr"
+                    placeholder="name@example.com"
+                    value={email}
+                    disabled={isPending}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block h-[55px] w-full rounded-md border border-gray-200 bg-white px-[17px] text-left text-black outline-0 transition-all placeholder:text-gray-500 focus:border-primary-500 disabled:opacity-60 dark:border-[#172036] dark:bg-[#0c1427] dark:text-white dark:placeholder:text-gray-400"
+                  />
                 </div>
 
-                <div>
+                <div className="relative" id="passwordHideShow">
                   <label
                     htmlFor="password"
-                    className="mb-2 block font-medium text-black dark:text-white"
+                    className="mb-[10px] block font-medium text-black dark:text-white md:mb-[12px]"
                   >
                     كلمة المرور
                   </label>
-                  <div className="relative">
-                    <i className="material-symbols-outlined absolute top-1/2 -translate-y-1/2 text-gray-400 ltr:left-4 rtl:right-4">
-                      lock
-                    </i>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={password}
-                      disabled={isPending}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-[52px] w-full rounded-xl border border-gray-200 bg-white px-12 text-black outline-none transition-all placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 disabled:opacity-60 dark:border-[#172036] dark:bg-[#0a0e19] dark:text-white dark:placeholder:text-gray-500"
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    autoComplete="current-password"
+                    placeholder="اكتب كلمة المرور"
+                    value={password}
+                    disabled={isPending}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block h-[55px] w-full rounded-md border border-gray-200 bg-white px-[17px] text-black outline-0 transition-all placeholder:text-gray-500 focus:border-primary-500 disabled:opacity-60 dark:border-[#172036] dark:bg-[#0c1427] dark:text-white dark:placeholder:text-gray-400"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                    className="absolute bottom-[12px] text-lg transition-all hover:text-primary-500 ltr:right-[20px] rtl:left-[20px]"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    <i
+                      className={`ri-${showPassword ? "eye-line" : "eye-off-line"}`}
                     />
-                    <button
-                      type="button"
-                      aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                      className="absolute top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-primary-500 ltr:right-4 rtl:left-4"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      <i
-                        className={`ri-${showPassword ? "eye-line" : "eye-off-line"} text-lg`}
-                      />
-                    </button>
-                  </div>
+                  </button>
                 </div>
 
                 {isError && (
@@ -216,7 +207,7 @@ const SignInForm: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isPending || !email || !password}
-                  className="mt-2 flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-primary-600 to-primary-500 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:from-primary-500 hover:to-primary-400 hover:shadow-primary-500/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+                  className="mt-[20px] flex h-[55px] w-full items-center justify-center gap-2 rounded-md bg-primary-500 font-medium text-white transition-all hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-60 md:mt-[25px]"
                 >
                   {isPending ? (
                     <>
