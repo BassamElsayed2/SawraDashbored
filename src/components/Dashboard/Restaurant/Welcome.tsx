@@ -62,23 +62,26 @@ const Welcome: React.FC = () => {
               <Image
                 src="/images/chowmein.png"
                 alt="chowmein"
-                className="inline-block"
+                className="inline-block w-[185px] max-w-full"
                 width={185}
                 height={185}
+                style={{ height: "auto" }}
               />
               <Image
                 src="/images/icons/3dots1.png"
                 alt="3dots1"
-                className="inline-block absolute bottom-0 ltr:right-0 rtl:left-0 rtl:-scale-x-[1]"
+                className="inline-block absolute bottom-0 w-[52px] ltr:right-0 rtl:left-0 rtl:-scale-x-[1]"
                 width={52}
                 height={55}
+                style={{ height: "auto" }}
               />
               <Image
                 src="/images/icons/3dots2.png"
                 alt="3dots2"
-                className="inline-block absolute top-0 ltr:-left-[10px] rtl:-right-[10px] rtl:-scale-x-[1]"
+                className="inline-block absolute top-0 w-[41px] ltr:-left-[10px] rtl:-right-[10px] rtl:-scale-x-[1]"
                 width={41}
                 height={45}
+                style={{ height: "auto" }}
               />
             </div>
           </div>
