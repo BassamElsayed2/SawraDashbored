@@ -4,9 +4,6 @@ export const profileSchema = z.object({
   full_name: z.string().min(1, "الاسم مطلوب"),
   email: z.string().email("البريد الإلكتروني غير صالح"),
   phone: z.string().optional(),
-  job_title: z.string().optional(),
-  address: z.string().optional(),
-  about: z.string().optional(),
 });
 
 export const signUpSchema = z.object({

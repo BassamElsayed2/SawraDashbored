@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-
 import { useSignIn } from "./useSignIn";
 
 const features = [
@@ -37,12 +35,7 @@ const SignInForm: React.FC = () => {
       />
 
       <div className="relative mx-auto flex min-h-screen max-w-[1255px] flex-col items-center justify-center px-4 py-16 md:px-8 lg:py-10">
-        <motion.div
-          className="mb-6 flex flex-wrap justify-center gap-2 lg:hidden"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {features.map((feature) => (
+        <div className="mb-6 flex flex-wrap justify-center gap-2 lg:hidden">          {features.map((feature) => (
             <span
               key={feature.label}
               className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-white/70 px-3 py-1.5 text-xs font-medium text-primary-700 backdrop-blur-sm dark:border-primary-800 dark:bg-[#0c1427]/70 dark:text-primary-300"
@@ -53,16 +46,10 @@ const SignInForm: React.FC = () => {
               {feature.label}
             </span>
           ))}
-        </motion.div>
+        </div>
 
         <div className="grid w-full grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          <motion.div
-            className="relative order-2 hidden overflow-hidden rounded-3xl shadow-2xl lg:block"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Image
+          <div className="relative order-2 hidden overflow-hidden rounded-3xl shadow-2xl lg:block">            <Image
               src="/images/sign-in1.jpg"
               alt="لوحة تحكم إدارة المطاعم"
               className="h-[560px] w-full object-cover"
@@ -73,50 +60,30 @@ const SignInForm: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e19]/90 via-[#0a0e19]/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
-              <motion.p
-                className="mb-2 text-sm font-medium text-primary-200"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              <p className="mb-2 text-sm font-medium text-primary-200">
                 نظام إدارة المطاعم
-              </motion.p>
-              <motion.h2
-                className="mb-6 text-2xl font-bold leading-snug xl:text-3xl"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
+              </p>
+              <h2 className="mb-6 text-white! text-2xl font-bold leading-snug xl:text-3xl">
                 كل ما تحتاجه لإدارة مطعمك في مكان واحد
-              </motion.h2>
+              </h2>
               <ul className="space-y-3">
-                {features.map((feature, index) => (
-                  <motion.li
+                {features.map((feature) => (
+                  <li
                     key={feature.label}
                     className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-500/80">
+                  >                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-500/80">
                       <i className="material-symbols-outlined text-[20px]">
                         {feature.icon}
                       </i>
                     </span>
                     <span className="text-sm font-medium">{feature.label}</span>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="order-1 lg:order-2"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur-md dark:border-[#172036] dark:bg-[#0c1427]/90 md:p-10">
+          <div className="order-1 lg:order-2">            <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur-md dark:border-[#172036] dark:bg-[#0c1427]/90 md:p-10">
               <div className="mb-8 flex items-center gap-3">
                 <Image
                   src="/images/logo-icon.png"
@@ -195,18 +162,12 @@ const SignInForm: React.FC = () => {
                 </div>
 
                 {isError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-600 dark:border-danger-800 dark:bg-danger-900/20 dark:text-danger-400"
-                  >
-                    <i className="material-symbols-outlined text-[18px]">
+                  <div className="flex items-center gap-2 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-600 dark:border-danger-800 dark:bg-danger-900/20 dark:text-danger-400">                    <i className="material-symbols-outlined text-[18px]">
                       error
                     </i>
                     <span>البريد الإلكتروني أو كلمة المرور غير صالحة</span>
-                  </motion.div>
+                  </div>
                 )}
-
                 <button
                   type="submit"
                   disabled={isPending || !email || !password}
@@ -250,9 +211,8 @@ const SignInForm: React.FC = () => {
                 <span>وصول آمن للمسؤولين المعتمدين فقط</span>
               </p>
             </div>
-          </motion.div>
-        </div>
-      </div>
+          </div>
+        </div>      </div>
     </div>
   );
 };

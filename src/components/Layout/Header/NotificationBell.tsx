@@ -40,7 +40,7 @@ const NotificationBell: React.FC = () => {
     <div className="relative ltr:mr-[13px] ltr:md:mr-[18px] ltr:lg:mr-[23px] rtl:ml-[13px] rtl:md:ml-[18px] rtl:lg:ml-[23px]">
       <Link
         href="/dashboard/orders"
-        className="relative inline-block transition-all hover:text-primary-500"
+        className="header-icon-btn relative"
         title="الطلبات المدفوعة"
       >
         <i className="material-symbols-outlined !text-[22px]">notifications</i>

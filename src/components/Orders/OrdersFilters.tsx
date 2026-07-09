@@ -13,40 +13,39 @@ interface OrdersFiltersProps {
   };
   onFilterChange: (filters: Record<string, unknown>) => void;
   branches?: Array<{ id?: string; name_ar: string }>;
+  totalResults?: number;
 }
 
 const OrdersFilters: React.FC<OrdersFiltersProps> = ({
   filters,
   onFilterChange,
   branches = [],
+  totalResults,
 }) => {
   const [searchTerm, setSearchTerm] = useState(filters.order_id || "");
   const [customerNameSearch, setCustomerNameSearch] = useState(
     filters.customer_name || ""
   );
+  const [expanded, setExpanded] = useState(false);
 
-  // Debounce order ID search
   useEffect(() => {
     const timer = setTimeout(() => {
       onFilterChange({
         ...filters,
         order_id: searchTerm || undefined,
       });
-    }, 500); // Wait 500ms after user stops typing
-
+    }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
-  // Debounce customer name search
   useEffect(() => {
     const timer = setTimeout(() => {
       onFilterChange({
         ...filters,
         customer_name: customerNameSearch || undefined,
       });
-    }, 500); // Wait 500ms after user stops typing
-
+    }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerNameSearch]);
@@ -64,152 +63,175 @@ const OrdersFilters: React.FC<OrdersFiltersProps> = ({
     onFilterChange({});
   };
 
-  const handleTogglePendingPayment = () => {
-    if (filters.status === "pending_payment") {
-      // إذا كان مفعل، قم بإلغاء التفعيل
-      handleFilterChange("status", "");
-    } else {
-      // إذا لم يكن مفعل، قم بتفعيله
-      handleFilterChange("status", "pending_payment");
-    }
-  };
+  const activeFilterCount = [
+    filters.status,
+    filters.branch_id,
+    filters.from_date,
+    filters.to_date,
+    filters.order_id,
+    filters.customer_name,
+  ].filter(Boolean).length;
 
   const statusOptions = [
     { value: "", label: "جميع الحالات" },
     { value: "pending", label: "قيد الانتظار" },
     { value: "pending_payment", label: "بانتظار الدفع" },
-    { value: "confirmed", label: "مؤكد" },
+    { value: "confirmed", label: "تم الدفع" },
     { value: "preparing", label: "قيد التحضير" },
     { value: "ready", label: "جاهز" },
     { value: "delivering", label: "قيد التوصيل" },
     { value: "delivered", label: "تم التوصيل" },
-    { value: "cancelled", label: "ملغى" },
+    { value: "cancelled", label: "ملغي" },
   ];
 
   return (
-    <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          تصفية الطلبات
-        </h3>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleTogglePendingPayment}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2 ${
-              filters.status === "pending_payment"
-                ? "bg-orange-600 text-white hover:bg-orange-700"
-                : "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50"
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">
-              pending_actions
+    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-[#172036] dark:bg-[#0c1427]">
+      <div className="p-4 md:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined pointer-events-none absolute top-1/2 -translate-y-1/2 text-[20px] text-gray-400 ltr:left-3 rtl:right-3">
+              search
             </span>
-            بانتظار الدفع
-          </button>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="ابحث برقم الطلب..."
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 text-sm text-gray-900 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white ltr:pl-10 ltr:pr-4 rtl:pl-4 rtl:pr-10"
+            />
+          </div>
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined pointer-events-none absolute top-1/2 -translate-y-1/2 text-[20px] text-gray-400 ltr:left-3 rtl:right-3">
+              person_search
+            </span>
+            <input
+              type="text"
+              value={customerNameSearch}
+              onChange={(e) => setCustomerNameSearch(e.target.value)}
+              placeholder="ابحث باسم العميل..."
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 text-sm text-gray-900 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white ltr:pl-10 ltr:pr-4 rtl:pl-4 rtl:pr-10"
+            />
+          </div>
           <button
-            onClick={handleReset}
-            className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-[#172036] dark:text-gray-300 dark:hover:bg-gray-800/40"
           >
-            إعادة تعيين
+            <span className="material-symbols-outlined text-[18px]">tune</span>
+            فلاتر متقدمة
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-xs font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Search by Order ID */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            رقم الطلب
-          </label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="ابحث برقم الطلب..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
+        {expanded && (
+          <div className="overflow-hidden">
+              <div className="mt-4 grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 dark:border-[#172036] sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                    الحالة
+                  </label>
+                  <select
+                    value={filters.status || ""}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-        {/* Search by Customer Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            اسم العميل
-          </label>
-          <input
-            type="text"
-            value={customerNameSearch}
-            onChange={(e) => setCustomerNameSearch(e.target.value)}
-            placeholder="ابحث باسم العميل..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
+                {branches.length > 0 && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      الفرع
+                    </label>
+                    <select
+                      value={filters.branch_id || ""}
+                      onChange={(e) =>
+                        handleFilterChange("branch_id", e.target.value)
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white"
+                    >
+                      <option value="">جميع الفروع</option>
+                      {branches
+                        .filter((branch) => branch.id)
+                        .map((branch) => (
+                          <option key={branch.id} value={branch.id}>
+                            {branch.name_ar}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
 
-        {/* Status Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            الحالة
-          </label>
-          <select
-            value={filters.status || ""}
-            onChange={(e) => handleFilterChange("status", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                    من تاريخ
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.from_date || ""}
+                    onChange={(e) =>
+                      handleFilterChange("from_date", e.target.value)
+                    }
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white"
+                  />
+                </div>
 
-        {/* Branch Filter */}
-        {branches.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              الفرع
-            </label>
-            <select
-              value={filters.branch_id || ""}
-              onChange={(e) => handleFilterChange("branch_id", e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">جميع الفروع</option>
-              {branches
-                .filter((branch) => branch.id)
-                .map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name_ar}
-                  </option>
-                ))}
-            </select>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                    إلى تاريخ
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.to_date || ""}
+                    onChange={(e) =>
+                      handleFilterChange("to_date", e.target.value)
+                    }
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-[#172036] dark:bg-gray-800/40 dark:text-white"
+                  />
+                </div>
+              </div>
           </div>
         )}
 
-        {/* From Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            من تاريخ
-          </label>
-          <input
-            type="date"
-            value={filters.from_date || ""}
-            onChange={(e) => handleFilterChange("from_date", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* To Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            إلى تاريخ
-          </label>
-          <input
-            type="date"
-            value={filters.to_date || ""}
-            onChange={(e) => handleFilterChange("to_date", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0c1427] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        {(activeFilterCount > 0 || totalResults !== undefined) && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {totalResults !== undefined && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {totalResults} طلب
+                </span>
+              )}
+              {activeFilterCount > 0 && (
+                <span className="text-xs text-primary-600 dark:text-primary-400">
+                  {activeFilterCount} فلتر نشط
+                </span>
+              )}
+            </div>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1 text-sm font-medium text-red-600 transition hover:text-red-700 dark:text-red-400"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  filter_alt_off
+                </span>
+                مسح الفلاتر
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

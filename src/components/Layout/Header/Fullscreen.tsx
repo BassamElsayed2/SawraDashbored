@@ -24,11 +24,11 @@ const Fullscreen: React.FC = () => {
       <div className="relative mx-[8px] md:mx-[10px] lg:mx-[12px] ltr:first:ml-0 ltr:last:mr-0 rtl:first:mr-0 rtl:last:ml-0">
         <button
           type="button"
-          className="leading-none inline-block transition-all relative top-[2px] hover:text-primary-500"
+          className="header-icon-btn"
           onClick={handleToggleFullscreen}
-          aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
+          aria-label={isFullscreen ? "الخروج من وضع ملء الشاشة" : "ملء الشاشة"}
         >
-          <i className="material-symbols-outlined !text-[22px] md:!text-[24px]">
+          <i className="material-symbols-outlined !text-[20px]">
             {isFullscreen ? "fullscreen_exit" : "fullscreen"}
           </i>
         </button>

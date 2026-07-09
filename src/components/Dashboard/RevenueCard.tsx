@@ -19,103 +19,82 @@ const RevenueCard: React.FC<RevenueCardProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow animate-pulse">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+      <div className="animate-pulse rounded-2xl bg-gradient-to-br from-primary-600 to-purple-800 p-6">
+        <div className="mb-6 h-6 w-1/2 rounded bg-white/20" />
         <div className="space-y-4">
-          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-24 rounded-xl bg-white/20" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="h-16 rounded-xl bg-white/20" />
+            <div className="h-16 rounded-xl bg-white/20" />
+          </div>
         </div>
       </div>
     );
   }
 
-  const revenuePerOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-  // حساب معدل إتمام الطلبات
   const completionRate =
     totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
 
-  // تحديد اللون حسب المعدل
-  const getCompletionColor = () => {
-    if (completionRate >= 80) return "text-green-300";
-    if (completionRate >= 60) return "text-yellow-300";
-    return "text-orange-300";
-  };
-
-  const getCompletionIcon = () => {
-    if (completionRate >= 80) return "trending_up";
-    if (completionRate >= 60) return "trending_flat";
-    return "trending_down";
-  };
+  const performanceLabel =
+    completionRate >= 80
+      ? "أداء ممتاز"
+      : completionRate >= 60
+        ? "أداء جيد"
+        : "يحتاج تحسين";
 
   return (
-    <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow text-white mb-10">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-          <span className="material-symbols-outlined text-3xl ">
+    <div
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 text-white shadow-xl shadow-primary-900/20"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+      />
+
+      <div className="relative">
+        <div className="mb-5 flex items-center gap-2">
+          <span className="material-symbols-outlined text-[28px] text-primary-200">
             account_balance_wallet
           </span>
-          ملخص الإيرادات
-        </h2>
-      </div>
+          <h2 className="text-lg font-bold">ملخص الإيرادات</h2>
+        </div>
 
-      <div className="space-y-6">
-        {/* إجمالي الإيرادات */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-          <p className="text-white/80 text-sm mb-2 ">إجمالي الإيرادات</p>
-          <p className="text-3xl font-bold">
-            {totalRevenue.toLocaleString()} ج.م
+        <div className="mb-5 rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+          <p className="mb-1 text-sm text-primary-200">إجمالي الإيرادات</p>
+          <p className="text-3xl font-bold tracking-tight">
+            {totalRevenue.toLocaleString()}{" "}
+            <span className="text-lg font-medium text-primary-200">ج.م</span>
           </p>
-          <p className="text-white/70 text-xs mt-1">
-            من {totalOrders.toLocaleString()} طلب مكتمل
+          <p className="mt-1 text-xs text-primary-200/80">
+            من {completedOrders.toLocaleString()} طلب مكتمل
           </p>
         </div>
 
-        {/* متوسط قيمة الطلب */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-            <p className="text-white/80 text-xs mb-2">متوسط قيمة الطلب</p>
-            <p className="text-xl font-bold">
-              {averageOrderValue.toFixed(2)} ج.م
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
+            <p className="mb-1 text-[11px] text-primary-200">متوسط الطلب</p>
+            <p className="text-lg font-bold">
+              {averageOrderValue.toFixed(0)} ج.م
             </p>
           </div>
-
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-            <p className="text-white/80 text-xs mb-2">متوسط الإيراد لكل طلب</p>
-            <p className="text-xl font-bold">
-              {revenuePerOrder.toFixed(2)} ج.م
-            </p>
+          <div className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
+            <p className="mb-1 text-[11px] text-primary-200">إجمالي الطلبات</p>
+            <p className="text-lg font-bold">{totalOrders.toLocaleString()}</p>
           </div>
         </div>
 
-        {/* مؤشرات إضافية */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-2xl">
-                {getCompletionIcon()}
-              </span>
-              <div>
-                <p className="text-white/80 text-xs">معدل إتمام الطلبات</p>
-                <p className="text-sm font-semibold">
-                  {completedOrders.toLocaleString()} من{" "}
-                  {totalOrders.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className={`text-2xl font-bold ${getCompletionColor()}`}>
-                {completionRate.toFixed(1)}%
-              </p>
-              <p className="text-white/70 text-xs">
-                {completionRate >= 80
-                  ? "أداء ممتاز"
-                  : completionRate >= 60
-                  ? "أداء جيد"
-                  : "يحتاج تحسين"}
-              </p>
-            </div>
+        <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm text-primary-200">معدل الإتمام</span>
+            <span className="text-lg font-bold">{completionRate.toFixed(0)}%</span>
           </div>
+          <div className="mb-2 h-2 overflow-hidden rounded-full bg-white/20">
+            <div
+              className="h-full rounded-full bg-white transition-all duration-700"
+              style={{ width: `${Math.min(completionRate, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-primary-200/80">{performanceLabel}</p>
         </div>
       </div>
     </div>

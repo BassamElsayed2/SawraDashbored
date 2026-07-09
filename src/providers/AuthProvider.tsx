@@ -17,6 +17,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function isDashboardAdmin(user: { role?: string; is_admin?: boolean } | null): boolean {
+  if (!user) return false;
+  if (user.is_admin) return true;
+  return user.role !== undefined && user.role !== "user";
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,16 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Verify admin role
-      const adminRoles = ["admin", "super_admin", "manager"];
-      const isAdmin = adminRoles.includes(currentUser.role || "");
-
-      if (!isAdmin) {
+      if (!isDashboardAdmin(currentUser)) {
         setUser(null);
 
-        // Only redirect if not on home page
-        if (pathname !== "/") {
-          router.replace("/?error=unauthorized");
+        if (pathname !== "/sign-in") {
+          router.replace("/sign-in/?error=unauthorized");
         }
         return;
       }
@@ -66,12 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiAuth.signIn({ email, password });
       const userData = response.data.user;
 
-      // Verify admin role
-      const adminRoles = ["admin", "super_admin", "manager"];
-      const isAdmin = adminRoles.includes(userData.role || "");
-
-      if (!isAdmin) {
-        // تنظيف الحالة أولاً لتجنب Race Condition
+      if (!isDashboardAdmin(userData)) {
         setUser(null);
 
         // ثم تسجيل الخروج من الخلفية
@@ -104,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error("حدث خطأ أثناء تسجيل الخروج");
     } finally {
       setUser(null);
-      router.push("/");
+      router.push("/sign-in/");
       router.refresh();
     }
   };

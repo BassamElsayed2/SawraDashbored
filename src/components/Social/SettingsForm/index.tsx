@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
@@ -9,11 +9,7 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/services/api-client";
 import { profileSchema } from "./lib/validations/schema";
 import { z } from "zod";
-import {
-  compressImage,
-  needsCompression,
-  formatFileSize,
-} from "../../../../src/lib/image-compression";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { getImageUrl } from "@/lib/image-url";
 import toast from "react-hot-toast";
 
@@ -30,7 +26,12 @@ const SettingsForm: React.FC = () => {
     resolver: zodResolver(profileSchema),
   });
 
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const {
+    selectedImage: profilePicture,
+    previewImage,
+    handleFileInputChange,
+    clearImage,
+  } = useImageUpload();
 
   // تحديث قيم الفورم عندما تتغير بيانات profile
   useEffect(() => {
@@ -41,61 +42,6 @@ const SettingsForm: React.FC = () => {
       });
     }
   }, [profile, reset]);
-
-  const handleProfilePictureChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-
-      // التحقق من نوع الملف
-      if (!file.type.startsWith("image/")) {
-        toast.error(`الملف ${file.name} ليس صورة`);
-        return;
-      }
-
-      // التحقق من حجم الملف (50MB كحد أقصى)
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error(`حجم الصورة ${file.name} يجب أن لا يتجاوز 50MB`);
-        return;
-      }
-
-      try {
-        // فحص ما إذا كانت الصورة تحتاج ضغط
-        if (needsCompression(file, 600)) {
-          toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
-
-          const compressionResult = await compressImage(file, {
-            maxSizeKB: 600,
-            quality: 0.8,
-            maxWidth: 1920,
-            maxHeight: 1080,
-          });
-
-          // عرض معلومات الضغط
-          toast.success(
-            `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
-              compressionResult.originalSize
-            )} → الحجم الجديد: ${formatFileSize(
-              compressionResult.compressedSize
-            )} (تم توفير ${compressionResult.compressionRatio}%)`
-          );
-
-          setProfilePicture(compressionResult.compressedFile);
-        } else {
-          // الصورة لا تحتاج ضغط
-          setProfilePicture(file);
-        }
-      } catch {
-        toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
-        setProfilePicture(file);
-      }
-    }
-  };
-
-  const handleRemoveProfilePicture = () => {
-    setProfilePicture(null);
-  };
 
   const uploadImage = async (file: File) => {
     try {
@@ -125,9 +71,6 @@ const SettingsForm: React.FC = () => {
       await apiClient.put("/admin/profile", {
         full_name: formData.full_name,
         phone: formData.phone,
-        job_title: formData.job_title,
-        address: formData.address,
-        about: formData.about,
         image_url: image_url,
       });
 
@@ -212,56 +155,6 @@ const SettingsForm: React.FC = () => {
 
                   <div className="mb-[20px] sm:mb-0">
                     <label className="mb-[10px] block font-medium text-black dark:text-white">
-                      الوظيفة
-                    </label>
-                    <input
-                      type="text"
-                      id="job_title"
-                      {...register("job_title")}
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                    />
-                    {errors.job_title && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.job_title.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mb-[20px] sm:mb-0">
-                    <label className="mb-[10px] block font-medium text-black dark:text-white">
-                      العنوان
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      {...register("address")}
-                      className="h-[55px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all"
-                    />
-                    {errors.address && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.address.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2 mb-[20px] sm:mb-0">
-                    <label className="mb-[10px] block font-medium text-black dark:text-white">
-                      عنك
-                    </label>
-                    <textarea
-                      id="about"
-                      {...register("about")}
-                      className="h-[140px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] p-[17px] block w-full outline-0 transition-all"
-                    ></textarea>
-                    {errors.about && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.about.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mb-[20px] sm:mb-0">
-                    <label className="mb-[10px] block font-medium text-black dark:text-white">
                       صورة الملف الشخصي
                     </label>
                     <div id="fileUploader">
@@ -282,7 +175,7 @@ const SettingsForm: React.FC = () => {
                           id="fileInput"
                           accept="image/*"
                           className="absolute top-0 left-0 right-0 bottom-0 rounded-md z-[1] opacity-0 cursor-pointer"
-                          onChange={handleProfilePictureChange}
+                          onChange={handleFileInputChange}
                         />
                       </div>
 
@@ -291,8 +184,8 @@ const SettingsForm: React.FC = () => {
                           <div className="relative w-[80px] h-[80px]">
                             <Image
                               src={
-                                profilePicture
-                                  ? URL.createObjectURL(profilePicture)
+                                profilePicture && previewImage
+                                  ? previewImage
                                   : getImageUrl(profile?.image_url)
                               }
                               alt="profile-preview"
@@ -304,7 +197,7 @@ const SettingsForm: React.FC = () => {
                               <button
                                 type="button"
                                 className="absolute top-[-5px] right-[-5px] bg-orange-500 text-white w-[20px] h-[20px] flex items-center justify-center rounded-full text-xs rtl:right-auto rtl:left-[-5px]"
-                                onClick={handleRemoveProfilePicture}
+                                onClick={clearImage}
                               >
                                 ✕
                               </button>

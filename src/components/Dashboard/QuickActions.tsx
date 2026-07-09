@@ -8,75 +8,85 @@ interface QuickAction {
   description: string;
   icon: string;
   href: string;
-  color: string;
+  gradient: string;
 }
 
 const QuickActions: React.FC = () => {
   const actions: QuickAction[] = [
     {
-      title: "إضافة منتج جديد",
-      description: "أضف منتج جديد للقائمة",
+      title: "إضافة منتج",
+      description: "منتج جديد للقائمة",
       icon: "add_box",
-      href: "/dashboard/news/create-news/",
-      color: "from-blue-500 to-blue-600",
+      href: "/dashboard/products/create/",
+      gradient: "from-blue-500 to-blue-600",
     },
     {
-      title: "عرض الطلبات",
-      description: "إدارة جميع الطلبات",
+      title: "الطلبات",
+      description: "متابعة وإدارة الطلبات",
       icon: "receipt_long",
-      href: "/dashboard/orders",
-      color: "from-orange-500 to-orange-600",
+      href: "/dashboard/orders/",
+      gradient: "from-orange-500 to-orange-600",
     },
     {
-      title: "إدارة المستخدمين",
-      description: "عرض وإدارة العملاء",
-      icon: "manage_accounts",
-      href: "/dashboard/users",
-      color: "from-purple-500 to-purple-600",
+      title: "الفروع",
+      description: "إدارة فروع المطعم",
+      icon: "storefront",
+      href: "/dashboard/branches/",
+      gradient: "from-teal-500 to-teal-600",
     },
     {
-      title: "العروض الخاصة",
-      description: "إنشاء وإدارة العروض",
+      title: "التصنيفات",
+      description: "تنظيم قائمة المنتجات",
+      icon: "category",
+      href: "/dashboard/products/categories/",
+      gradient: "from-purple-500 to-purple-600",
+    },
+    {
+      title: "العروض",
+      description: "إنشاء عروض خاصة",
       icon: "local_offer",
       href: "/dashboard/ads/create-combo-offer/",
-      color: "from-green-500 to-green-600",
+      gradient: "from-green-500 to-green-600",
+    },
+    {
+      title: "المستخدمين",
+      description: "إدارة العملاء والمسؤولين",
+      icon: "manage_accounts",
+      href: "/dashboard/users/",
+      gradient: "from-indigo-500 to-indigo-600",
     },
   ];
 
   return (
-    <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow hover:shadow-lg transition-shadow">
-      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-        <span className="material-symbols-outlined text-orange-500">bolt</span>
+    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-[#172036] dark:bg-[#0c1427]">
+      <h2 className="mb-5 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+        <span className="material-symbols-outlined text-primary-500">bolt</span>
         إجراءات سريعة
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {actions.map((action, index) => (
-          <Link
-            key={index}
-            href={action.href}
-            className="group relative overflow-hidden rounded-lg p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-start gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {actions.map((action) => (
+          <div key={action.href}>
+            <Link
+              href={action.href}
+              className="group flex flex-col items-center gap-2.5 rounded-xl border border-gray-100 bg-gray-50/80 p-4 text-center transition hover:border-primary-200 hover:bg-primary-50/50 hover:shadow-sm dark:border-[#172036] dark:bg-gray-800/30 dark:hover:border-primary-800 dark:hover:bg-primary-900/10"
+            >
               <div
-                className={`flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br ${action.color} shadow-lg group-hover:scale-110 transition-transform`}
+                className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br shadow-md transition group-hover:scale-105 ${action.gradient}`}
               >
-                <span className="material-symbols-outlined text-white text-2xl">
+                <span className="material-symbols-outlined text-[22px] text-white">
                   {action.icon}
                 </span>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-800 dark:text-white mb-1 group-hover:text-orange-500 transition-colors">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 transition group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
                   {action.title}
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                </p>
+                <p className="mt-0.5 text-[11px] leading-tight text-gray-500 dark:text-gray-400">
                   {action.description}
                 </p>
               </div>
-              <span className="material-symbols-outlined text-gray-400 group-hover:text-orange-500 group-hover:translate-x-1 transition-all">
-                arrow_forward
-              </span>
-            </div>
-          </Link>
+            </Link>
+          </div>
         ))}
       </div>
     </div>

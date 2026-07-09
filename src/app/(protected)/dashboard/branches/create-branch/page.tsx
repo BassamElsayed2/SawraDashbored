@@ -1,16 +1,12 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { createBranch } from "@/services/apiBranchQR";
 import { uploadBranchImage } from "@/services/apiUpload";
 import toast from "react-hot-toast";
-import {
-  compressImage,
-  needsCompression,
-  formatFileSize,
-} from "../../../../../lib/image-compression";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import dynamic from "next/dynamic";
 
 // Load GoogleMapPicker dynamically to avoid SSR issues
@@ -31,14 +27,17 @@ type FormData = {
   lng?: number;
 };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
 export default function CreateBranch() {
   const router = useRouter();
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const {
+    selectedImage,
+    previewImage,
+    isCompressing,
+    handleFileInputChange,
+    clearImage,
+  } = useImageUpload();
+
   const [loading, setLoading] = useState(false);
 
   const {
@@ -50,83 +49,7 @@ export default function CreateBranch() {
     watch,
   } = useForm<FormData>();
 
-  // Cleanup preview URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (previewImage) {
-        URL.revokeObjectURL(previewImage);
-      }
-    };
-  }, [previewImage]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file type
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      toast.error(
-        "نوع الملف غير مدعوم. يرجى اختيار صورة بصيغة JPG أو PNG أو WEBP"
-      );
-      return;
-    }
-
-    // Check file size
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("حجم الصورة كبير جداً. الحد الأقصى هو 50 ميجابايت");
-      return;
-    }
-
-    try {
-      // فحص ما إذا كانت الصورة تحتاج ضغط
-      if (needsCompression(file, 600)) {
-        toast(`جاري ضغط الصورة ${file.name}...`, { icon: "ℹ️" });
-
-        const compressionResult = await compressImage(file, {
-          maxSizeKB: 600,
-          quality: 0.8,
-          maxWidth: 1920,
-          maxHeight: 1080,
-        });
-
-        // عرض معلومات الضغط
-        toast.success(
-          `تم ضغط الصورة بنجاح! الحجم الأصلي: ${formatFileSize(
-            compressionResult.originalSize
-          )} → الحجم الجديد: ${formatFileSize(
-            compressionResult.compressedSize
-          )} (تم توفير ${compressionResult.compressionRatio}%)`
-        );
-
-        // Cleanup previous preview URL
-        if (previewImage) {
-          URL.revokeObjectURL(previewImage);
-        }
-
-        setSelectedImage(compressionResult.compressedFile);
-        setPreviewImage(URL.createObjectURL(compressionResult.compressedFile));
-      } else {
-        // الصورة لا تحتاج ضغط
-        // Cleanup previous preview URL
-        if (previewImage) {
-          URL.revokeObjectURL(previewImage);
-        }
-
-        setSelectedImage(file);
-        setPreviewImage(URL.createObjectURL(file));
-      }
-    } catch {
-      toast.error("حدث خطأ أثناء ضغط الصورة، سيتم استخدام الصورة الأصلية");
-
-      // Cleanup previous preview URL
-      if (previewImage) {
-        URL.revokeObjectURL(previewImage);
-      }
-
-      setSelectedImage(file);
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
+  const handleFileChange = handleFileInputChange;
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -163,11 +86,7 @@ export default function CreateBranch() {
       await createBranch(branchData);
 
       reset();
-      setSelectedImage(null);
-      if (previewImage) {
-        URL.revokeObjectURL(previewImage);
-      }
-      setPreviewImage(null);
+      clearImage();
       toast.success("تم إنشاء فرع بنجاح");
       router.push("/dashboard/branches");
     } catch {
@@ -367,13 +286,7 @@ export default function CreateBranch() {
                       <button
                         type="button"
                         className="absolute top-[-5px] right-[-5px] bg-orange-500 text-white w-[20px] h-[20px] flex items-center justify-center rounded-full text-xs"
-                        onClick={() => {
-                          setSelectedImage(null);
-                          if (previewImage) {
-                            URL.revokeObjectURL(previewImage);
-                          }
-                          setPreviewImage(null);
-                        }}
+                        onClick={clearImage}
                       >
                         ✕
                       </button>
