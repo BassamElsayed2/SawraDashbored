@@ -16,7 +16,7 @@ export default function ProtectedWrapper({
   useEffect(() => {
     if (!loading && !user) {
       // Redirect to home page if not authenticated
-      router.replace("/");
+      router.replace("/sign-in/");
     }
   }, [user, loading, router]);
 

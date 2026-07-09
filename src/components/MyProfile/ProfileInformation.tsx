@@ -34,27 +34,6 @@ const ProfileInformation: React.FC<ProfileIntroProps> = ({ profile }) => {
             </li>
 
             <li className="mb-[12.5px] last:mb-0">
-              الموقع:
-              <span className="text-black dark:text-white font-medium">
-                {"  "}
-                {profile?.address || "-"}
-              </span>
-            </li>
-            <li className="mb-[12.5px] last:mb-0">
-              الوظيفة:
-              <span className="text-black dark:text-white font-medium">
-                {"  "}
-                {profile?.job_title || "-"}
-              </span>
-            </li>
-            <li className="mb-[12.5px] last:mb-0">
-              عنك:
-              <span className="text-black dark:text-white font-medium">
-                {"  "}
-                {profile?.about || "-"}
-              </span>
-            </li>
-            <li className="mb-[12.5px] last:mb-0">
               تاريخ الانضمام:
               <span className="text-black dark:text-white font-medium">
                 {"  "}

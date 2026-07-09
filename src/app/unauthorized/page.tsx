@@ -10,7 +10,7 @@ export default function UnauthorizedPage() {
   useEffect(() => {
     // Auto redirect to home after 10 seconds
     const timer = setTimeout(() => {
-      router.push("/");
+      router.push("/sign-in/");
     }, 10000);
 
     return () => clearTimeout(timer);
@@ -59,7 +59,7 @@ export default function UnauthorizedPage() {
           {/* Actions */}
           <div className="space-y-3">
             <Link
-              href="/"
+              href="/sign-in/"
               className="inline-block w-full py-3 px-4 bg-primary-500 hover:bg-primary-400 text-white font-medium rounded-md transition-colors"
             >
               العودة إلى الصفحة الرئيسية

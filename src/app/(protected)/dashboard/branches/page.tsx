@@ -13,50 +13,14 @@ import {
 } from "@/services/apiBranchQR";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import dynamic from "next/dynamic";
-
-// Load GoogleMapPicker dynamically to avoid SSR issues
-const GoogleMapPicker = dynamic(
-  () => import("../../../../components/GoogleMapPicker"),
-  { ssr: false }
-);
-
 import { getImageUrl as getImageUrlFromLib } from "@/lib/image-url";
+import type { Branch, BranchFormData } from "@/components/branches/types";
+import { BranchEditModal } from "@/components/branches/BranchEditModal";
+import { BranchQRModal } from "@/components/branches/BranchQRModal";
+import { BranchDeleteDialog } from "@/components/branches/BranchDeleteDialog";
 
 const getImageUrl = (branch: Branch): string =>
   getImageUrlFromLib(branch.image_url || branch.image);
-
-export interface Branch {
-  id: string;
-  name_ar: string;
-  name_en: string;
-  area_ar: string;
-  area_en: string;
-  address_ar: string;
-  address_en: string;
-  works_hours: string;
-  phone: string;
-  email?: string;
-  google_map: string;
-  image?: string; // Legacy field
-  image_url?: string; // Current field
-  lat?: number;
-  lng?: number;
-  is_active?: boolean;
-  created_at: string;
-}
-
-type FormData = {
-  name_ar: string;
-  name_en: string;
-  address_ar: string;
-  address_en: string;
-  phone: string;
-  email?: string;
-  google_map?: string;
-  lat?: number;
-  lng?: number;
-};
 
 const BranchesList: React.FC = () => {
   const [branchesList, setBranchesList] = useState<Branch[]>([]);
@@ -86,7 +50,7 @@ const BranchesList: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
-  } = useForm<FormData>();
+  } = useForm<BranchFormData>();
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -216,7 +180,7 @@ const BranchesList: React.FC = () => {
     }
   };
 
-  const onEditSubmit = async (data: FormData) => {
+  const onEditSubmit = async (data: BranchFormData) => {
     if (!selectedBranch) return;
     setLoading(true);
 
@@ -276,6 +240,14 @@ const BranchesList: React.FC = () => {
     (currentPage - 1) * branchesPerPage,
     currentPage * branchesPerPage
   );
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    reset();
+    setSelectedImage(null);
+    setPreviewImage(null);
+    setSelectedBranch(null);
+  };
 
   return (
     <div className="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
@@ -442,374 +414,33 @@ const BranchesList: React.FC = () => {
           </table>
         </div>
 
-        {/* Edit Modal */}
-        {isEditModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#0c1427] p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-black dark:text-white">
-                  تعديل الفرع
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    reset();
-                    setSelectedImage(null);
-                    setPreviewImage(null);
-                    setSelectedBranch(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <i className="material-symbols-outlined">close</i>
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit(onEditSubmit)}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      اسم الفرع (ar)
-                    </label>
-                    <input
-                      {...register("name_ar", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "الاسم يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.name_ar && (
-                      <p className="text-red-500 mt-1">
-                        {errors.name_ar.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      اسم الفرع (en)
-                    </label>
-                    <input
-                      {...register("name_en", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "الاسم يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.name_en && (
-                      <p className="text-red-500 mt-1">
-                        {errors.name_en.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      العنوان (ar)
-                    </label>
-                    <input
-                      {...register("address_ar", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.address_ar && (
-                      <p className="text-red-500 mt-1">
-                        {errors.address_ar.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      العنوان (en)
-                    </label>
-                    <input
-                      {...register("address_en", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "العنوان يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.address_en && (
-                      <p className="text-red-500 mt-1">
-                        {errors.address_en.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      رقم الهاتف
-                    </label>
-                    <input
-                      {...register("phone", {
-                        required: true,
-                        minLength: {
-                          value: 3,
-                          message: "رقم الهاتف يجب أن يكون 3 أحرف على الأقل",
-                        },
-                      })}
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                    {errors.phone && (
-                      <p className="text-red-500 mt-1">
-                        {errors.phone.message || "مطلوب"}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      اختر موقع الفرع على الخريطة
-                    </label>
-                    <GoogleMapPicker
-                      onLocationSelect={(lat, lng) => {
-                        setValue("lat", lat);
-                        setValue("lng", lng);
-                        toast.success(
-                          `تم تحديد الموقع: ${lat.toFixed(4)}, ${lng.toFixed(
-                            4
-                          )}`
-                        );
-                      }}
-                      initialLat={selectedBranch?.lat || 24.7136}
-                      initialLng={selectedBranch?.lng || 46.6753}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      خط العرض - Latitude (يمكن التعديل)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      {...register("lat", { valueAsNumber: true })}
-                      placeholder="24.7136"
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                    />
-                    {errors.lat && (
-                      <p className="text-red-500 mt-1">{errors.lat.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      خط الطول - Longitude (يمكن التعديل)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      {...register("lng", { valueAsNumber: true })}
-                      placeholder="46.6753"
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                    />
-                    {errors.lng && (
-                      <p className="text-red-500 mt-1">{errors.lng.message}</p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      الموقع الجغرافي (google map) - اختياري
-                    </label>
-                    <input
-                      {...register("google_map")}
-                      placeholder="رابط خريطة جوجل"
-                      className="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-4 block w-full outline-0 transition-all"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block font-medium text-black dark:text-white">
-                      الصورة
-                    </label>
-                    <div className="relative flex items-center justify-center overflow-hidden rounded-md py-8 px-4 border border-gray-200 dark:border-[#172036]">
-                      <div className="flex items-center justify-center">
-                        <div className="w-8 h-8 border border-gray-100 dark:border-[#15203c] flex items-center justify-center rounded-md text-primary-500 text-lg ltr:mr-3 rtl:ml-3">
-                          <i className="ri-upload-2-line"></i>
-                        </div>
-                        <p className="text-black dark:text-white">
-                          <strong>اضغط لرفع الصورة</strong>
-                          <br /> JPG, PNG, WEBP (الحد الأقصى 50 ميجابايت)
-                        </p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        onChange={handleFileChange}
-                      />
-                    </div>
-
-                    {previewImage && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <div className="relative w-[50px] h-[50px]">
-                          <Image
-                            src={previewImage}
-                            alt="preview"
-                            width={50}
-                            height={50}
-                            className="rounded-md"
-                          />
-                          <button
-                            type="button"
-                            className="absolute top-[-5px] right-[-5px] bg-orange-500 text-white w-[20px] h-[20px] flex items-center justify-center rounded-full text-xs"
-                            onClick={() => {
-                              setSelectedImage(null);
-                              setPreviewImage(null);
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditModalOpen(false);
-                      reset();
-                      setSelectedImage(null);
-                      setPreviewImage(null);
-                      setSelectedBranch(null);
-                    }}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 disabled:opacity-50"
-                  >
-                    {loading ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+        {isEditModalOpen && selectedBranch && (
+          <BranchEditModal
+            branch={selectedBranch}
+            previewImage={previewImage}
+            loading={loading}
+            register={register}
+            errors={errors}
+            setValue={setValue}
+            onSubmit={handleSubmit(onEditSubmit)}
+            onFileChange={handleFileChange}
+            onClearImage={() => {
+              setSelectedImage(null);
+              setPreviewImage(null);
+            }}
+            onClose={closeEditModal}
+          />
         )}
 
-        {/* QR Code Modal */}
         {isQRModalOpen && selectedQRCode && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#0c1427] p-6 rounded-lg w-full max-w-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-black dark:text-white">
-                  رمز QR للفرع
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsQRModalOpen(false);
-                    setSelectedQRCode(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <i className="material-symbols-outlined">close</i>
-                </button>
-              </div>
-
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src={selectedQRCode.qr_code_url}
-                    alt="QR Code"
-                    width={200}
-                    height={200}
-                    className="mx-auto border border-gray-200 rounded-lg"
-                    style={{ maxWidth: "200px", maxHeight: "200px" }}
-                  />
-                </div>
-
-                <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                  <p className="mb-2">
-                    رمز QR يؤدي إلى صفحة الاستطلاع الخاصة بهذا الفرع
-                  </p>
-
-                  {/* Survey Link */}
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md mb-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      رابط الاستطلاع:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={
-                          selectedQRCode.survey_url ||
-                          `https://cp.elsawra.net/feedback-survey/${selectedQRCode.branch_id}`
-                        }
-                        readOnly
-                        className="flex-1 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-700 dark:text-gray-300"
-                      />
-                      <button
-                        onClick={() => {
-                          const url =
-                            selectedQRCode.survey_url ||
-                            `https://cp.elsawra.net/feedback-survey/${selectedQRCode.branch_id}`;
-                          navigator.clipboard.writeText(url);
-                          toast.success("تم نسخ الرابط");
-                        }}
-                        className="text-blue-500 hover:text-blue-600"
-                        title="نسخ الرابط"
-                      >
-                        <i className="material-symbols-outlined !text-sm">
-                          content_copy
-                        </i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-xs">
-                    تاريخ الإنشاء:{" "}
-                    {selectedQRCode.created_at
-                      ? new Date(selectedQRCode.created_at).toLocaleDateString(
-                          "ar-EG"
-                        )
-                      : "غير محدد"}
-                  </p>
-                </div>
-
-                <div className="flex gap-2 justify-center">
-                  <button
-                    onClick={() => handleDownloadQRCode(selectedQRCode)}
-                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  >
-                    <i className="material-symbols-outlined !text-sm ml-1">
-                      download
-                    </i>
-                    تحميل
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsQRModalOpen(false);
-                      setSelectedQRCode(null);
-                    }}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    إغلاق
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BranchQRModal
+            qrCode={selectedQRCode}
+            onClose={() => {
+              setIsQRModalOpen(false);
+              setSelectedQRCode(null);
+            }}
+            onDownload={handleDownloadQRCode}
+          />
         )}
 
         {/* Pagination */}
@@ -831,50 +462,12 @@ const BranchesList: React.FC = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
         {deleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#0c1427] p-6 rounded-lg max-w-md w-full mx-4">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mr-4">
-                  <i className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">
-                    warning
-                  </i>
-                </div>
-                <h3 className="text-xl font-semibold text-black dark:text-white">
-                  تأكيد الحذف
-                </h3>
-              </div>
-
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                هل أنت متأكد من حذف الفرع{" "}
-                <span className="font-bold text-black dark:text-white">
-                  &ldquo;{deleteConfirm.branchName}&rdquo;
-                </span>
-                ؟
-                <br />
-                <span className="text-red-600 dark:text-red-400 text-sm">
-                  هذا الإجراء لا يمكن التراجع عنه.
-                </span>
-              </p>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={cancelDelete}
-                  className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-                >
-                  إلغاء
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-all flex items-center gap-2"
-                >
-                  <i className="material-symbols-outlined text-sm">delete</i>
-                  حذف الفرع
-                </button>
-              </div>
-            </div>
-          </div>
+          <BranchDeleteDialog
+            branchName={deleteConfirm.branchName}
+            onConfirm={confirmDelete}
+            onCancel={cancelDelete}
+          />
         )}
       </div>
     </div>

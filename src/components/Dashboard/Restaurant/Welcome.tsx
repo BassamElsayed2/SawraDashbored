@@ -1,94 +1,139 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
-import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";import { useAdminProfile } from "@/components/MyProfile/useAdminProfile";
 
-import { getProducts } from "@/services/apiProducts";
-import { getOffers } from "@/services/apiComboOffers";
+interface WelcomeProps {
+  totalProducts?: number;
+  totalOrders?: number;
+  activeOrders?: number;
+  totalRevenue?: number;
+  isLoading?: boolean;
+}
 
-const Welcome: React.FC = () => {
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "صباح الخير";
+  if (hour < 17) return "مساء الخير";
+  return "مساء الخير";
+}
+
+function formatDate(): string {
+  return new Intl.DateTimeFormat("ar-EG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+}
+
+const Welcome: React.FC<WelcomeProps> = ({
+  totalProducts = 0,
+  totalOrders = 0,
+  activeOrders = 0,
+  totalRevenue = 0,
+  isLoading,
+}) => {
   const { data: profile } = useAdminProfile();
+  const name = profile?.full_name || "المسؤول";
 
-  const { data: products } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts(),
-  });
-
-  const { data: comboOffers } = useQuery({
-    queryKey: ["comboOffers"],
-    queryFn: () => getOffers(),
-  });
+  const highlights = [
+    {
+      label: "المنتجات",
+      value: totalProducts,
+      icon: "restaurant_menu",
+    },
+    {
+      label: "إجمالي الطلبات",
+      value: totalOrders,
+      icon: "receipt_long",
+    },
+    {
+      label: "طلبات نشطة",
+      value: activeOrders,
+      icon: "pending_actions",
+    },
+    {
+      label: "الإيرادات",
+      value: `${totalRevenue.toLocaleString()} ج.م`,
+      icon: "payments",
+    },
+  ];
 
   return (
-    <>
-      <div className="trezo-card bg-orange-400 p-[20px] md:p-[25px] rounded-md mb-[25px]">
-        <div className="trezo-card-content md:py-[23.5px]">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-[25px]">
-            <div className="text-center ltr:md:text-left rtl:md:text-right ltr:lg:-mr-[55px] rtl:lg:-ml-[55px] 2xl:ltr:mr-0 2xl:rtl:ml-0 2xl:max-w-[330px]">
-              <span className="inline-block md:text-md text-orange-100 py-[1px] px-[13px] mb-[12px] font-medium bg-[#212529]">
-                مرحبا بك, {profile?.full_name || "Admin"}!
+    <div
+      className="relative overflow-hidden rounded-2xl border border-primary-200/60 bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 shadow-xl shadow-primary-900/20 md:p-8 dark:border-primary-800/40"
+    >      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white/10 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-orange-400/20 blur-3xl"
+      />
+
+      <div className="relative grid grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_auto]">
+        <div>
+          <p className="mb-2 text-sm font-medium text-primary-200">
+            {formatDate()}
+          </p>
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white backdrop-blur-sm">
+            <span className="material-symbols-outlined text-[16px]">
+              waving_hand
+            </span>
+            {getGreeting()}، {name}
+          </span>
+          <h1 className="mb-2 text-2xl font-bold leading-tight text-white! md:text-3xl">
+            لوحة تحكم المطعم
+          </h1>
+          <p className="mb-6 max-w-lg text-sm leading-relaxed text-primary-100/90 md:text-base">
+            نظرة شاملة على أداء مطعمك — الطلبات، المبيعات، والمنتجات في مكان
+            واحد.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/orders/"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-primary-700 shadow-md transition hover:bg-primary-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                receipt_long
               </span>
-
-              <h1 className="!-tracking-[0.5px] !leading-[1.2] !mb-0 !text-xl md:!text-2xl 2xl:!text-3xl !text-white">
-                احصائيات الموقع.
-              </h1>
-
-              <div className="mt-[15px] md:mt-[25px] flex items-center justify-center md:justify-start gap-[25px] 2xl:gap-[40px]">
-                <div className="relative ltr:pl-[33px] rtl:pr-[33px]">
-                  <i className="material-symbols-outlined absolute ltr:left-0 rtl:right-0 text-white top-[2px]">
-                    order_approve
-                  </i>
-                  <span className="block text-white">المنتجات</span>
-                  <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {products?.total || 0}+
-                  </h6>
-                </div>
-
-                <div className="relative ltr:pl-[33px] rtl:pr-[33px]">
-                  <i className="material-symbols-outlined absolute ltr:left-0 rtl:right-0 text-white top-[2px]">
-                    photo_camera
-                  </i>
-                  <span className="block text-white">العروض</span>
-                  <h6 className="!mb-0 !text-md !text-white !mt-[2px]">
-                    {comboOffers?.length || 0}+
-                  </h6>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative text-center ltr:mr-auto rtl:ml-auto ltr:md:mr-0 rtl:md:ml-0 ltr:text-right rtl:text-left max-w-[217px] ltr:ml-auto rtl:mr-auto py-[10px] ltr:pr-[22px] rtl:pl-[22px]">
-              <Image
-                src="/images/chowmein.png"
-                alt="chowmein"
-                className="inline-block w-[185px] max-w-full"
-                width={185}
-                height={185}
-                style={{ height: "auto" }}
-              />
-              <Image
-                src="/images/icons/3dots1.png"
-                alt="3dots1"
-                className="inline-block absolute bottom-0 w-[52px] ltr:right-0 rtl:left-0 rtl:-scale-x-[1]"
-                width={52}
-                height={55}
-                style={{ height: "auto" }}
-              />
-              <Image
-                src="/images/icons/3dots2.png"
-                alt="3dots2"
-                className="inline-block absolute top-0 w-[41px] ltr:-left-[10px] rtl:-right-[10px] rtl:-scale-x-[1]"
-                width={41}
-                height={45}
-                style={{ height: "auto" }}
-              />
-            </div>
+              عرض الطلبات
+            </Link>
+            <Link
+              href="/dashboard/products/create/"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              إضافة منتج
+            </Link>
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {highlights.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm"
+            >              <div className="mb-2 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-primary-200">
+                  {item.icon}
+                </span>
+                <span className="text-xs font-medium text-primary-200">
+                  {item.label}
+                </span>
+              </div>
+              {isLoading ? (
+                <div className="h-7 w-16 animate-pulse rounded bg-white/20" />
+              ) : (
+                <p className="text-xl font-bold text-white">{item.value}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
-
 export default Welcome;

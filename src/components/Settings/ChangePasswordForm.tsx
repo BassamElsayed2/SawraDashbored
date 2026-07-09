@@ -95,7 +95,7 @@ const ChangePasswordForm: React.FC = () => {
 
         // Redirect to login after a short delay
         setTimeout(() => {
-          router.push("/auth/signin");
+          router.push("/sign-in/");
         }, 1500);
       } else {
         setMessage(response.message || "حدث خطأ أثناء تحديث كلمة السر.");

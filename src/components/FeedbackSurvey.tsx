@@ -11,7 +11,6 @@ import {
 } from "../types/feedback";
 import { FaStar } from "react-icons/fa";
 import Confetti from "react-confetti";
-import { motion } from "framer-motion";
 import { useRef } from "react";
 interface FeedbackSurveyProps {
   branchId?: string;
@@ -207,13 +206,9 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-lg flex items-center justify-center z-50 p-4">
-          <motion.div
+          <div
             ref={modalRef}
             className="relative bg-gradient-to-br from-white to-red-50 rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 max-w-sm sm:max-w-md lg:max-w-lg w-full text-center overflow-hidden"
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.7, opacity: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <div className="absolute inset-0">
               <Confetti
@@ -247,7 +242,7 @@ const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
             <p className="text-red-600 text-base sm:text-lg mb-4 sm:mb-6 relative z-10">
               تم إرسال تقييمك بنجاح
             </p>
-          </motion.div>
+          </div>
         </div>
       )}
 
