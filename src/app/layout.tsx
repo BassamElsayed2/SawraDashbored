@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="rtl">
+    <html lang="ar" dir="rtl">
       <body className={`${cairo.variable} antialiased`}>
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
